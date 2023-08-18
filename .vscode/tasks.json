@@ -1,0 +1,21 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+			{
+				"label": "echo",
+				"type": "shell",
+				"command": "clang",
+				"problemMatcher": [],
+				"args": [
+					"--output=uspl_compiler.exe",
+					"-g",
+					"-std=c++2b",
+					"main.cpp",
+				],
+				"group": {
+					"kind": "build",
+					"isDefault": true
+				}
+			}
+	]
+}
