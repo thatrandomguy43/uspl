@@ -4,12 +4,12 @@
 
 ### inbuilt basic types
 | Size    | Integer | Unsigned integer | Float | Character |
-| ------- | ------- | ------- | ------- | ------- | ------- |
-| 8 bits  | int8    | uint8    | N/A    | char8    |
-| 16 bits | int16     | uint16    | N/A    | char16    |
-| 32 bits    | int32    | uint32    | float32    | char32    |
-| 64 bits    | int64    | uint64    | float64    | N/A   |
-bool and void also exist with their obvious C++ meanings.
+| ------- | ------- | ------- | ------- | ------- |
+| 8 bits | _int8_ | _uint8_ | N/A | _char8_ |
+| 16 bits | _int16_ | _uint16_ | N/A | _char16_|
+| 32 bits | _int32_ | _uint32_ | _float32_ | _char32_ |
+| 64 bits | _int64_ | _uint64_ | _float64_ | N/A |
+_bool_ and _void_ also exist with their obvious C++ meanings.
 
 ### variable declaration:
 
