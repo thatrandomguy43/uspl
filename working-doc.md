@@ -4,7 +4,7 @@
 
 ### inbuilt basic types
 | Size    | Integer | Unsigned integer | Float | Character |
-| -------- | ------- | ------- | ------- | ------- | ------- |
+| ------- | ------- | ------- | ------- | ------- | ------- |
 | 8 bits  | int8    | uint8    | N/A    | char8    |
 | 16 bits | int16     | uint16    | N/A    | char16    |
 | 32 bits    | int32    | uint32    | float32    | char32    |
@@ -13,4 +13,4 @@ bool and void also exist with their obvious C++ meanings.
 
 ### variable declaration:
 
-(var | const) 
+(var | const) type
