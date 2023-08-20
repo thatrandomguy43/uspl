@@ -9,11 +9,19 @@ using namespace std;
 
 vector<string> program_args{};
 
-int main(int argc, const char** argv){
-    for(int argument_index = 0; argument_index < argc; argument_index++)
+namespace IO {
+vector<string> GrabCLIArguments(int argc, const char** argv){
+    vector<string> args{};
+    for (int argument_index = 0; argument_index < argc; argument_index++)
     {
-        program_args.push_back(argv[argument_index]);
+        args.push_back(argv[argument_index]);
     }
+    return args;
+}
+}
+
+int main(int argc, const char** argv){
+    program_args = IO::GrabCLIArguments(argc, argv);
     if (program_args.size() < 2){
         cout << "specify a damn file" << endl;
         return 1;
