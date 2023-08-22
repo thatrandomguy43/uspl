@@ -2,7 +2,9 @@
 
 #include <string>
 #include <optional>
-
+#include <vector>
+namespace Tokenizer 
+{
 enum TokenType
 {
     identifier,
@@ -46,12 +48,14 @@ enum TokenType
     operator_shift_left,
     operator_shift_right
 
-
-
     //ones i can think of rn, some of these will take a while to be added
-
 };
-class Token{
+class Token
+{
     TokenType m_type;
     std::optional<std::string> m_Contents;
 };
+
+std::vector<Token> TokenizeText(std::string text);
+
+}
