@@ -69,3 +69,29 @@ end
 for loops are not decided yet, what do i actually want? c++ for loops are just while loops with a fancy hat, and foreach/iterator loops are hard to understand
 
 
+literals 
+
+bool has
+true
+false
+
+int64 has
+any number without a decimal point
+will find some way to do other types
+
+float64 has
+any number with a decimal point
+will find some way to do other types
+
+char8 has
+single quoted char literals
+c style string literals
+
+types the when combine
+
+classes should be there, though with only interface inheritance
+c++ const methods are cool
+
+i should probably add rust style tagged unions/enums, they solve a lot of problems at once
+i will probably have to just panic if accessed wrong, at least for now
+
