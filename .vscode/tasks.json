@@ -10,7 +10,8 @@
 					"--output=uspl_compiler.exe",
 					"-g",
 					"-std=c++2b",
-					"main.cpp",
+					"src/IO.cpp",
+					"src/Tokenizer.cpp",
 				],
 				"group": {
 					"kind": "build",
