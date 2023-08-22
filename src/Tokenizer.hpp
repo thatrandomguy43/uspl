@@ -15,6 +15,7 @@ enum TokenType
     literal_char,
     literal_string,
 
+    operator_assignment,
     keyword_var,
     keyword_const,
     keyword_function,
@@ -73,16 +74,17 @@ enum TokenType
     open_brace,
     close_brace,
 
-    comma,
-    newline,
+    seperator,
 
 
     //ones i can think of rn, some of these will take a while to be added
 };
 class Token
 {
+    public:
     TokenType m_type;
-    std::optional<std::string> m_Contents;
+    std::optional<std::string> m_contents;
+    Token(TokenType type, std::optional<std::string> contents);
 };
 
 std::vector<Token> TokenizeText(std::string text);
