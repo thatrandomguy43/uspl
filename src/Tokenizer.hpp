@@ -1,5 +1,3 @@
-#pragma once
-
 #include <string>
 #include <optional>
 #include <vector>
@@ -75,7 +73,7 @@ enum TokenType
     close_brace,
 
     seperator,
-
+    error_token
 
     //ones i can think of rn, some of these will take a while to be added
 };
@@ -87,6 +85,7 @@ class Token
     Token(TokenType type, std::optional<std::string> contents);
 };
 
-std::vector<Token> TokenizeText(std::string text);
+std::vector<Token> TokenizeText(const std::string& text);
+Token TestForToken(int pos, const std::string& text);
 
 }

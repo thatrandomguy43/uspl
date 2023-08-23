@@ -2,6 +2,7 @@
 #include <optional>
 #include <vector>
 #include <map>
+#include <variant>
 using namespace std;
 using namespace Tokenizer;
 //oh the horror! TWO using namespaces!
@@ -85,30 +86,28 @@ the approach im gonna use is going to prioritize 2 length operators
 Token::Token(TokenType type, optional<string> contents) : m_type(type), m_contents(contents)
 {}
 
-vector<Token> Tokenizer::TokenizeText(std::string text){
+
+
+vector<Token> Tokenizer::TokenizeText(const string& text){
     vector<Token> token_list;
     for (size_t current_pos = 0; current_pos < text.size();)
     {
-        string potential_operator = text.substr(current_pos, 2);
-        map<string, TokenType>::const_iterator token_type_location = TOKEN_IDS.find(potential_operator);
-        if (token_type_location != TOKEN_IDS.cend()) 
-        {
-            token_list.push_back(Token{token_type_location->second, nullopt});
-        }
-        else 
-        {
-            token_type_location = TOKEN_IDS.find(potential_operator.substr(0, 1));
-            if (token_type_location != TOKEN_IDS.cend())
-            {
-                token_list.push_back(Token{token_type_location->second, nullopt});
-            }
-        }
-        
-        
-        
-
-
-
+        TestForToken(current_pos, text);
     }
     return token_list;
+}
+
+Token Tokenizer::TestForToken(int pos, const string& text){
+        string potential_token = text.substr(pos, 2);
+        if (TOKEN_IDS.contains(potential_token)){
+            return Token{TOKEN_IDS.at(potential_token), nullopt};;
+        }
+        potential_token = text.substr(pos, 1);
+        if (TOKEN_IDS.contains(potential_token)) {
+            return Token{TOKEN_IDS.at(potential_token), nullopt};
+        }
+        if (potential_token == "\""){
+            
+        }
+        return Token{error_token,nullopt};
 }
