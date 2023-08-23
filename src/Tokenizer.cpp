@@ -1,8 +1,8 @@
 #include "Tokenizer.hpp"
-#include <optional>
-#include <vector>
 #include <map>
 #include <variant>
+#include <vcruntime.h>
+
 using namespace std;
 using namespace Tokenizer;
 //oh the horror! TWO using namespaces!
@@ -83,31 +83,56 @@ the approach im gonna use is going to prioritize 2 length operators
     {",",seperator},
 };
 
-Token::Token(TokenType type, optional<string> contents) : m_type(type), m_contents(contents)
-{}
 
 
 
-vector<Token> Tokenizer::TokenizeText(const string& text){
+variant<vector<Token>, TokenizationError> Tokenizer::TokenizeText(const string& text){
     vector<Token> token_list;
     for (size_t current_pos = 0; current_pos < text.size();)
     {
-        TestForToken(current_pos, text);
+        variant<Token, TokenizationError> parsed = TestForToken(current_pos, text);
+        if (holds_alternative<TokenizationError>(parsed))
+        {
+            return get<TokenizationError>(parsed);
+        } 
+        else 
+        {
+            current_pos += get<Token>(parsed).m_length;
+        }
     }
     return token_list;
 }
 
-Token Tokenizer::TestForToken(int pos, const string& text){
-        string potential_token = text.substr(pos, 2);
+variant<Token, TokenizationError> Tokenizer::TestForToken(size_t position, const string& text){
+        string potential_token = text.substr(position, 2);
         if (TOKEN_IDS.contains(potential_token)){
-            return Token{TOKEN_IDS.at(potential_token), nullopt};;
+            return Token{nullopt, 2, TOKEN_IDS.at(potential_token)};
         }
-        potential_token = text.substr(pos, 1);
+        potential_token = text.substr(position, 1);
         if (TOKEN_IDS.contains(potential_token)) {
-            return Token{TOKEN_IDS.at(potential_token), nullopt};
+            return Token{nullopt, 1, TOKEN_IDS.at(potential_token)};
         }
         if (potential_token == "\""){
-            
+            size_t string_lit_end = text.find('"', position + 1);
+            if (string_lit_end == string::npos)
+            {
+                return TokenizationError{string{""}, position, -1};
+            }
+            string quoted_contents = text.substr(position + 1, string_lit_end - position - 1);
+            Token result{nullopt, string_lit_end - position + 1, literal_string};
+            variant<string, TokenizationError> processed = ProcessStringLiteral(text);
+            if (holds_alternative<TokenizationError>(processed))
+            {
+                return get<TokenizationError>(processed);
+            }
+            result.m_contents = get<string>(processed);
+            return result;
         }
-        return Token{error_token,nullopt};
+
+        TokenizationError error;
+        return error;
+}
+//placeholder for dealing with escape characters later
+variant<string, TokenizationError> Tokenizer::ProcessStringLiteral(const std::string &text){
+    return text;
 }

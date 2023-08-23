@@ -1,6 +1,8 @@
 #include <string>
 #include <optional>
+#include <vcruntime.h>
 #include <vector>
+#include <variant>
 namespace Tokenizer 
 {
 enum TokenType
@@ -72,20 +74,27 @@ enum TokenType
     open_brace,
     close_brace,
 
-    seperator,
-    error_token
+    seperator
 
     //ones i can think of rn, some of these will take a while to be added
 };
 class Token
 {
     public:
-    TokenType m_type;
     std::optional<std::string> m_contents;
-    Token(TokenType type, std::optional<std::string> contents);
+    size_t m_length;
+    TokenType m_type;
+};
+class TokenizationError
+{
+    public:
+    std::string m_error_msg;
+    size_t m_position;
+    int m_error_code;
 };
 
-std::vector<Token> TokenizeText(const std::string& text);
-Token TestForToken(int pos, const std::string& text);
+std::variant<std::vector<Token>, TokenizationError> TokenizeText(const std::string& text);
+std::variant<Token, TokenizationError> TestForToken(size_t position, const std::string& text);
+std::variant<std::string, TokenizationError> ProcessStringLiteral(const std::string& text);
 
 }
