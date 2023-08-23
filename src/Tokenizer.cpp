@@ -1,7 +1,6 @@
 #include "Tokenizer.hpp"
 #include <map>
 #include <variant>
-#include <vcruntime.h>
 
 using namespace std;
 using namespace Tokenizer;
@@ -35,16 +34,6 @@ const map<string, TokenType> TOKEN_IDS
     {"and", operator_logical_and},
     {"not", operator_logical_not},
 
-/*
-there's really no harm in allowing the 2 versions of inequality, less equal and greater equal
-it's easy to swap them around accidentally, and there's really no harm in allowing it
-i guess maybe the second not equal could be mistaken for bitwise not like this? 
-var int16 x=-32678
-var int16 y=~x
-y == 32767
-but i dont think thats a problem 
-the approach im gonna use is going to prioritize 2 length operators
-*/
     {"==", operator_equality},
     {"!=", operator_inequality},
     {"=!", operator_inequality},
@@ -116,11 +105,11 @@ variant<Token, TokenizationError> Tokenizer::TestForToken(size_t position, const
             size_t string_lit_end = text.find('"', position + 1);
             if (string_lit_end == string::npos)
             {
-                return TokenizationError{string{""}, position, -1};
+                return TokenizationError{string{"double quote not closed"}, position, -1};
             }
             string quoted_contents = text.substr(position + 1, string_lit_end - position - 1);
             Token result{nullopt, string_lit_end - position + 1, literal_string};
-            variant<string, TokenizationError> processed = ProcessStringLiteral(text);
+            variant<string, TokenizationError> processed = ProcessStringLiteral(quoted_contents);
             if (holds_alternative<TokenizationError>(processed))
             {
                 return get<TokenizationError>(processed);
@@ -128,6 +117,10 @@ variant<Token, TokenizationError> Tokenizer::TestForToken(size_t position, const
             result.m_contents = get<string>(processed);
             return result;
         }
+        if (potential_token == "\'"){
+
+        }
+
 
         TokenizationError error;
         return error;

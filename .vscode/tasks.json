@@ -10,6 +10,7 @@
 					"--output=uspl_compiler.exe",
 					"-g",
 					"-std=c++2b",
+					"-Wall",
 					"src/IO.cpp",
 					"src/Tokenizer.cpp",
 				],

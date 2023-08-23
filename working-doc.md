@@ -11,19 +11,21 @@ I am also going to use the same metagrammar as used in the [Lua documentation](h
 
 The type system is similar to C++, but with different syntax.
 
-*INCOMPLETE*
+
 #### Built-in basic types
 
-| Size    | Integer | Unsigned integer | Float | Character |
-| ------- | ------- | ------- | ------- | ------- |
-| 8 bits | int8 | uint8 | N/A | char8 |
-| 16 bits | int16 | uint16 | N/A | char16 |
-| 32 bits | int32 | uint32 | float32 | char32 |
-| 64 bits | int64 | uint64 | float64 | N/A |
+| Size    | Integer | Unsigned integer | Float   | Character |
+| ------- | ------- | -------          | ------- | -------   |
+| 8 bits  | int8    | uint8            | N/A     | char      |
+| 16 bits | int16   | uint16           | N/A     | N/A       |
+| 32 bits | int32   | uint32           | float32 | N/A       |
+| 64 bits | int64   | uint64           | float64 | N/A       |
 
 bool and void also exist with their obvious C++ meanings.
+UPDATE: scrapped the wide chars, they add extra text encoding problems and make dealing with strings in the compiler more difficult
+i'm just gonna add utf8 shit in the std::string clone i'll make (if this project isn't dead by then ofc)
 
-*INCOMPLETE*
+
 #### var and const
 
 The two keywords var and const are used to create a variable. If var is used, the value of the variable can be changed later. If const is used, it can't. This is unlike most other languages, where either mutable or constant are treated as the default, with the other being a type modifier. JavaScript is the one language I can think of that defines variables in the same way.
@@ -51,7 +53,7 @@ ok i am tired of doing this formally, ill do it later
 
 blocks are started with do and ended with end like lua
 
-the keywords and, or and not are used for logic instead of operators
+the keywords and, or and not are used for boolean logic instead of operators
 
 if statements look like:
 
@@ -77,15 +79,17 @@ false
 
 int64 has
 any number without a decimal point
-will find some way to do other types
 
 float64 has
 any number with a decimal point
-will find some way to do other types
 
-char8 has
+char has
 single quoted char literals
 c style string literals
+
+i want to avoid type inference, because it makes my job harder and creates WTFs like c++ overload resolution
+
+i should then not have to worry about literal typing, because you can't deduce a type from them
 
 types the when combine
 
@@ -95,3 +99,5 @@ c++ const methods are cool
 i should probably add rust style tagged unions/enums, they solve a lot of problems at once
 i will probably have to just panic if accessed wrong, at least for now
 
+
+exceptions are cringe (and a super pain in the ass from a compiler perspective i think)

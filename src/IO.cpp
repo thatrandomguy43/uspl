@@ -9,7 +9,7 @@
 using namespace std;
 
 
-
+vector<string> IO::program_args{};
 
 void IO::GrabCLIArguments(int argc, const char** argv)
 {
@@ -20,11 +20,13 @@ void IO::GrabCLIArguments(int argc, const char** argv)
     return;
 }
 
+
+
 int main(int argc, const char** argv){
     IO::GrabCLIArguments(argc, argv);
-    
+
     if (IO::program_args.size() < 2){
-        cout << "specify a damn file" << endl;
+        cout << "specify a damn file😳" << endl;
         return 1;
     }
     fstream test_in;
@@ -44,7 +46,7 @@ int main(int argc, const char** argv){
 
     fstream primary_out;
 
-    primary_out.open("out.ll", ios::out);
+    primary_out.open("testout.ll", ios::out);
     primary_out << input_storage;
     primary_out.close();
     return 0;
