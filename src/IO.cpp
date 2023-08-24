@@ -6,10 +6,12 @@
 #include <fstream>
 #include <variant>
 #include <sstream>
+
 using namespace std;
 
 
 vector<string> IO::program_args{};
+vector<IO::CompileError> IO::error_list{};
 
 void IO::GrabCLIArguments(int argc, const char** argv)
 {

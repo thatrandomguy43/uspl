@@ -1,5 +1,7 @@
+#include "IO.hpp"
 #include "Tokenizer.hpp"
 #include <map>
+#include <optional>
 #include <variant>
 
 using namespace std;
@@ -75,57 +77,57 @@ const map<string, TokenType> TOKEN_IDS
 
 
 
-variant<vector<Token>, TokenizationError> Tokenizer::TokenizeText(const string& text){
+vector<Token> Tokenizer::TokenizeText(const string& text){
     vector<Token> token_list;
     for (size_t current_pos = 0; current_pos < text.size();)
     {
-        variant<Token, TokenizationError> parsed = TestForToken(current_pos, text);
-        if (holds_alternative<TokenizationError>(parsed))
-        {
-            return get<TokenizationError>(parsed);
-        } 
-        else 
-        {
-            current_pos += get<Token>(parsed).m_length;
-        }
+        Token parsed = TestForToken(current_pos, text);
+
+            current_pos += parsed.m_length;
+
     }
     return token_list;
 }
 
-variant<Token, TokenizationError> Tokenizer::TestForToken(size_t position, const string& text){
-        string potential_token = text.substr(position, 2);
-        if (TOKEN_IDS.contains(potential_token)){
-            return Token{nullopt, 2, TOKEN_IDS.at(potential_token)};
-        }
-        potential_token = text.substr(position, 1);
-        if (TOKEN_IDS.contains(potential_token)) {
-            return Token{nullopt, 1, TOKEN_IDS.at(potential_token)};
-        }
-        if (potential_token == "\""){
-            size_t string_lit_end = text.find('"', position + 1);
-            if (string_lit_end == string::npos)
-            {
-                return TokenizationError{string{"double quote not closed"}, position, -1};
-            }
-            string quoted_contents = text.substr(position + 1, string_lit_end - position - 1);
-            Token result{nullopt, string_lit_end - position + 1, literal_string};
-            variant<string, TokenizationError> processed = ProcessStringLiteral(quoted_contents);
-            if (holds_alternative<TokenizationError>(processed))
-            {
-                return get<TokenizationError>(processed);
-            }
-            result.m_contents = get<string>(processed);
-            return result;
-        }
-        if (potential_token == "\'"){
+Token Tokenizer::TestForToken(size_t position, const string& text)
+{
+    string potential_token = text.substr(position, 2);
+    if (TOKEN_IDS.contains(potential_token))
+    {
+        return Token{nullopt, 2, TOKEN_IDS.at(potential_token)};
+    }
+    potential_token = text.substr(position, 1);
+    if (TOKEN_IDS.contains(potential_token)) 
+    {
+        return Token{nullopt, 1, TOKEN_IDS.at(potential_token)};
+    }
+    if (potential_token == "\"")
+    {
+        string literal_substring = text.substr(position, text.find_first_of('\"', position + 1));
+        return ProcessTextLiteral(literal_substring);
+    }
+    if (potential_token == "\'")
+    {
+        string literal_substring = text.substr(position, text.find_first_of('\'', position + 1));
+        return ProcessTextLiteral(literal_substring);
+    }
+        if (potential_token == "\'")
+    {
+        string literal_substring = text.substr(position, text.find_first_of('\'', position + 1));
+        return ProcessTextLiteral(literal_substring);
+    }
 
-        }
 
 
-        TokenizationError error;
-        return error;
+    return Token{nullopt, 1, error_token};
 }
 //placeholder for dealing with escape characters later
-variant<string, TokenizationError> Tokenizer::ProcessStringLiteral(const std::string &text){
-    return text;
+Token Tokenizer::ProcessTextLiteral(const std::string &text)
+{
+    return Token{};
+}
+
+Token Tokenizer::ProcessNumberLiteral(const std::string &text)
+{
+    return Token{};
 }

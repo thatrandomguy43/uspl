@@ -74,7 +74,8 @@ enum TokenType
     open_brace,
     close_brace,
 
-    seperator
+    seperator,
+    error_token
 
     //ones i can think of rn, some of these will take a while to be added
 };
@@ -85,16 +86,10 @@ class Token
     size_t m_length;
     TokenType m_type;
 };
-class TokenizationError
-{
-    public:
-    std::string m_error_msg;
-    size_t m_position;
-    int m_error_code;
-};
 
-std::variant<std::vector<Token>, TokenizationError> TokenizeText(const std::string& text);
-std::variant<Token, TokenizationError> TestForToken(size_t position, const std::string& text);
-std::variant<std::string, TokenizationError> ProcessStringLiteral(const std::string& text);
+std::vector<Token> TokenizeText(const std::string& text);
+Token TestForToken(size_t position, const std::string& text);
+Token ProcessTextLiteral(const std::string& text);
+Token ProcessNumberLiteral(const std::string& text);
 
 }
