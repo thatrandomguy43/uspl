@@ -126,7 +126,10 @@ Token Tokenizer::TestForToken(size_t position, const string& text)
 
 string EscapeText(const string& text)
 {
+    string escaped_output;
+    
 
+    return escaped_output;
 }
 
 //oh good lord no
@@ -135,7 +138,7 @@ string EscapeText(const string& text)
 Token Tokenizer::ProcessTextLiteral(const std::string &text, size_t position)
 {
     string escaped = EscapeText(text);
-    
+
     
     return Token{};
 }
