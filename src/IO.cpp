@@ -1,55 +1,90 @@
 
-
+#include "Tokenizer.hpp"
 #include "IO.hpp"
 
 #include <iostream>
 #include <fstream>
+#include <optional>
 #include <variant>
 #include <sstream>
+#include <map>
 
 using namespace std;
+using namespace IO;
 
 
 vector<string> IO::program_args{};
 vector<IO::CompileError> IO::error_list{};
 
-void IO::GrabCLIArguments(int argc, const char** argv)
+
+void IO::AddError(CompileError error)
 {
-    for (int argument_index = 0; argument_index < argc; argument_index++)
-    {
-        program_args.push_back(argv[argument_index]);
-    }
+    error_list.push_back(error);
     return;
 }
 
-
-
-int main(int argc, const char** argv){
-    IO::GrabCLIArguments(argc, argv);
-
-    if (IO::program_args.size() < 2){
-        cout << "specify a damn file😳" << endl;
-        return 1;
-    }
-    fstream test_in;
-    test_in.open(IO::program_args[1], ios::in);
-    if (test_in.fail())
+vector<string> IO::GrabCLIArguments(int argc, const char** argv)
+{
+    vector<string> args_vec;
+    for (int argument_index = 1; argument_index < argc; argument_index++)
     {
-        cout << "could not load file " <<  IO::program_args[1] << endl;
-        return 1;
+        args_vec.push_back(argv[argument_index]);
+    }
+    return args_vec;
+}
+
+string IO::GetFileContents(string filename)
+{
+    fstream file_in;
+    file_in.open(filename, ios::in);
+    if (file_in.fail())
+    {
+        AddError({"Arguments", 0, "Could not open file " + filename});
+        return "";
     }
     stringstream input_buffer;
-    string input_storage{};
+    string input_storage;
 
-    input_buffer << test_in.rdbuf();
+    input_buffer << file_in.rdbuf();
     input_storage = input_buffer.str();
 
-    test_in.close();
+    file_in.close();
 
-    fstream primary_out;
+    return input_storage;
+}
 
-    primary_out.open("testout.ll", ios::out);
-    primary_out << input_storage;
-    primary_out.close();
+int main(int argc, const char** argv){
+    program_args = GrabCLIArguments(argc, argv);
+
+    if (program_args.size() == 0){
+        cout << "specify a damn file" << endl;
+        return 0xDEE5D1CC;
+    }
+
+    map<string, string> files_contents;
+
+    for (auto arg : program_args)
+    {
+        if (arg[0] != '-')
+        {
+            files_contents[arg] = GetFileContents(arg);
+        }
+    }
+
+    map<string, vector<Tokenizer::Token>> token_streams;
+
+    for (auto file : files_contents)
+    {
+        token_streams[file.first] = Tokenizer::TokenizeText(file.second);
+    }
+
+
+
+      
+    
+
+
+
+
     return 0;
 }
