@@ -1,6 +1,6 @@
+#include <stdint.h>
 #include <string>
 #include <optional>
-#include <vcruntime.h>
 #include <vector>
 #include <variant>
 namespace Tokenizer 
@@ -82,7 +82,7 @@ enum TokenType
 class Token
 {
     public:
-    std::optional<std::string> m_contents;
+    std::variant<std::nullopt_t, char, std::string, uint64_t, double> m_contents;
     size_t m_length;
     TokenType m_type;
 };

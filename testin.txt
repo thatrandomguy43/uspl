@@ -1,4 +1,4 @@
-var int32 loul
+var int32 loul = "hello\n"
 
 while () do
 

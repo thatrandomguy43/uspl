@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <optional>
+#include <stdlib.h>
 #include <variant>
 #include <sstream>
 #include <map>
@@ -13,9 +14,9 @@ using namespace std;
 using namespace IO;
 
 
-vector<string> IO::program_args{};
-vector<IO::CompileError> IO::error_list{};
-
+vector<string> IO::program_args;
+vector<IO::CompileError> IO::error_list;
+string IO::current_file;
 
 void IO::AddError(CompileError error)
 {
@@ -56,6 +57,7 @@ string IO::GetFileContents(string filename)
 int main(int argc, const char** argv){
     program_args = GrabCLIArguments(argc, argv);
 
+
     if (program_args.size() == 0){
         cout << "specify a damn file" << endl;
         return 0xDEE5D1CC;
@@ -77,14 +79,6 @@ int main(int argc, const char** argv){
         current_file = file.first;
         token_streams[file.first] = Tokenizer::TokenizeText(file.second);
     }
-
-
-
-      
-    
-
-
-
 
     return 0;
 }
