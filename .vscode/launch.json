@@ -5,12 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "lldb",
+            "name": "(Windows) Launch",
+            "type": "cppvsdbg",
             "request": "launch",
-            "name": "Debug",
             "program": "${workspaceFolder}/uspl_compiler.exe",
-            "args": ["testin.txt"],
-            "cwd": "${workspaceFolder}"
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "console": "integratedTerminal"
         }
+
+
     ]
 }
