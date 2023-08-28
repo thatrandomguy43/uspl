@@ -1,4 +1,4 @@
-var int32 loul = 5
+var int32 loul
 
 while () do
 

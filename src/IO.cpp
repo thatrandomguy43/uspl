@@ -70,7 +70,6 @@ int main(int argc, const char** argv){
             files_contents[arg] = GetFileContents(arg);
         }
     }
-
     map<string, vector<Tokenizer::Token>> token_streams;
 
     for (auto file : files_contents)
