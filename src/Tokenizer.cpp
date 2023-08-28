@@ -1,7 +1,9 @@
 #include "IO.hpp"
 #include "Tokenizer.hpp"
+#include <cstddef>
 #include <map>
 #include <optional>
+#include <string>
 #include <variant>
 
 using namespace std;
@@ -92,15 +94,15 @@ Token Tokenizer::TestForToken(size_t position, const string& text)
     {
         return Token{nullopt, 1, SYMBOL_TOKEN_IDS.at(potential_token)};
     }
-    if (potential_token == "\"" or potential_token == "\'" )
+    if (potential_token == "\"" or potential_token == "'" )
     {
         string literal_substring = text.substr(position, text.find_first_of("\"\'", position + 1));
-        return ProcessTextLiteral(literal_substring);
+        return ProcessTextLiteral(literal_substring, position);
     }
     if (potential_token >= "0" and potential_token <= "9" )
     {
         string literal_substring = text.substr(position, text.find_first_not_of("0123456789.x", position) - 1);
-        return ProcessNumberLiteral(literal_substring);
+        return ProcessNumberLiteral(literal_substring, position);
     }
     potential_token = text.substr(position, text.find_first_of(" \n\r\t\v\f", position) - position);
     if (KEYWORD_TOKEN_IDS.contains(potential_token))
@@ -119,13 +121,26 @@ Token Tokenizer::TestForToken(size_t position, const string& text)
 
     return Token{potential_token, potential_token.length(), identifier};
 }
-//placeholder for dealing with escape characters later
-Token Tokenizer::ProcessTextLiteral(const std::string &text)
+
+
+
+string EscapeText(const string& text)
 {
+
+}
+
+//oh good lord no
+//this needs extreme fixing
+
+Token Tokenizer::ProcessTextLiteral(const std::string &text, size_t position)
+{
+    string escaped = EscapeText(text);
+    
+    
     return Token{};
 }
 
-Token Tokenizer::ProcessNumberLiteral(const std::string &text)
+Token Tokenizer::ProcessNumberLiteral(const std::string &text, size_t position)
 {
     return Token{};
 }
