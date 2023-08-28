@@ -74,6 +74,7 @@ int main(int argc, const char** argv){
 
     for (auto file : files_contents)
     {
+        current_file = file.first;
         token_streams[file.first] = Tokenizer::TokenizeText(file.second);
     }
 

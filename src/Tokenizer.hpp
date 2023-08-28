@@ -89,7 +89,7 @@ class Token
 
 std::vector<Token> TokenizeText(const std::string& text);
 Token TestForToken(size_t position, const std::string& text);
-Token ProcessTextLiteral(const std::string& text);
-Token ProcessNumberLiteral(const std::string& text);
+Token ProcessTextLiteral(const std::string& text, size_t position);
+Token ProcessNumberLiteral(const std::string& text, size_t position);
 
 }
