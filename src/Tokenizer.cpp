@@ -1,9 +1,8 @@
 #include "IO.hpp"
 #include "Tokenizer.hpp"
+#include <exception>
 #include <map>
-#include <optional>
 #include <iostream>
-#include <vcruntime.h>
 
 using namespace std;
 using namespace Tokenizer;
@@ -73,7 +72,7 @@ vector<Token> Tokenizer::TokenizeText(const string& text){
     vector<Token> token_list;
     for (size_t current_pos = 0; current_pos < text.size();)
     {
-        Token parsed = TestForToken(current_pos, text);
+        Token parsed = TestForToken(text, current_pos);
         current_pos += parsed.m_length;
         current_pos = text.find_first_not_of(" \n\r\t\v\f", current_pos);
         token_list.push_back(parsed);
@@ -81,7 +80,7 @@ vector<Token> Tokenizer::TokenizeText(const string& text){
     return token_list;
 }
 
-Token Tokenizer::TestForToken(size_t position, const string& text)
+Token Tokenizer::TestForToken(const string& text, size_t position)
 {
     string potential_token = text.substr(position, 2);
     if (SYMBOL_TOKEN_IDS.contains(potential_token))
@@ -99,8 +98,7 @@ Token Tokenizer::TestForToken(size_t position, const string& text)
     }
     if (potential_token >= "0" and potential_token <= "9" )
     {
-        string literal_substring = text.substr(position, text.find_first_not_of("0123456789.x", position) - position - 1);
-        return ProcessNumberLiteral(literal_substring, position);
+        return ProcessNumberLiteral(text, position);
     }
     potential_token = text.substr(position, text.find_first_of(" \n\r\t\v\f", position) - position);
     if (KEYWORD_TOKEN_IDS.contains(potential_token))
@@ -224,7 +222,26 @@ Token Tokenizer::ProcessTextLiteral(const std::string &text, size_t start_pos)
 
 Token Tokenizer::ProcessNumberLiteral(const std::string &text, size_t position)
 {
-    char* end_address
+    size_t length;
+    if (text.substr(position, 2) == "0x")
+    {
+        position += 2;
+        uint64_t value;
+        try 
+        {
+            value = stoull(text.substr(position, string::npos), &length, 16);
+        }
+        catch (exception e)
+        {
+
+        }
+        
+        return Token{value, length+2, literal_integer};
+    } 
+    else 
+    {
+        
+    }
 
     return Token{nullopt, 1, error_token};
 }

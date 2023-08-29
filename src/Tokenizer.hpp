@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <string>
 #include <optional>
 #include <vector>
@@ -88,7 +87,7 @@ class Token
 };
 
 std::vector<Token> TokenizeText(const std::string& text);
-Token TestForToken(size_t position, const std::string& text);
+Token TestForToken(const std::string& text, size_t position);
 Token ProcessTextLiteral(const std::string& text, size_t position);
 Token ProcessNumberLiteral(const std::string& text, size_t position);
 

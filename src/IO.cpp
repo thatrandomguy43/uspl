@@ -1,12 +1,8 @@
-
 #include "Tokenizer.hpp"
 #include "IO.hpp"
 
 #include <iostream>
 #include <fstream>
-#include <optional>
-#include <stdlib.h>
-#include <variant>
 #include <sstream>
 #include <map>
 
@@ -56,7 +52,6 @@ string IO::GetFileContents(string filename)
 
 int main(int argc, const char** argv){
     program_args = GrabCLIArguments(argc, argv);
-
 
     if (program_args.size() == 0){
         cout << "specify a damn file" << endl;
