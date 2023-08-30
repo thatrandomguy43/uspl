@@ -10,7 +10,7 @@ using namespace std;
 using namespace IO;
 
 
-vector<string> IO::program_args;
+set<string> IO::program_args;
 vector<IO::CompileError> IO::error_list;
 string IO::current_file;
 
@@ -20,12 +20,12 @@ void IO::AddError(CompileError error)
     return;
 }
 
-vector<string> IO::GrabCLIArguments(int argc, const char** argv)
+set<string> IO::GrabCLIArguments(int argc, const char** argv)
 {
-    vector<string> args_vec;
+    set<string> args_vec;
     for (int argument_index = 1; argument_index < argc; argument_index++)
     {
-        args_vec.push_back(argv[argument_index]);
+        args_vec.insert(argv[argument_index]);
     }
     return args_vec;
 }
@@ -50,7 +50,8 @@ string IO::GetFileContents(string filename)
     return input_storage;
 }
 
-int main(int argc, const char** argv){
+int main(int argc, const char** argv)
+{
     program_args = GrabCLIArguments(argc, argv);
 
     if (program_args.size() == 0){

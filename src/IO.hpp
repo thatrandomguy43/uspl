@@ -1,6 +1,6 @@
 #include <vector>
 #include <string>
-
+#include <set>
 
 namespace IO {
     class CompileError{
@@ -9,10 +9,10 @@ namespace IO {
         size_t position;
         std::string error_msg;
     };
-    extern std::vector<std::string> program_args;
+    extern std::set<std::string> program_args;
     extern std::vector<CompileError> error_list;
     extern std::string current_file;
-    std::vector<std::string> GrabCLIArguments(int argc, const char** argv);
+    std::set<std::string> GrabCLIArguments(int argc, const char** argv);
     std::string GetFileContents(std::string filepath);
     void AddError(CompileError error);
 

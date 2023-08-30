@@ -30,10 +30,10 @@ enum TokenType
     keyword_in,
     keyword_break,
 
-    operator_plus,
-    operator_minus,
-    operator_multiply,
-    operator_divide,
+    operator_addition,
+    operator_subtraction,
+    operator_multiplication,
+    operator_division,
     operator_modulo,
 
     operator_logical_or,
@@ -74,6 +74,13 @@ enum TokenType
     close_brace,
 
     seperator,
+
+    reserved_hash,
+    reserved_exclamation,
+    reserved_questionmark,
+    reserved_colon,
+    reserved_semicolon,
+
     error_token
 
     //ones i can think of rn, some of these will take a while to be added
@@ -81,7 +88,7 @@ enum TokenType
 class Token
 {
     public:
-    std::variant<std::nullopt_t, char, std::string, uint64_t, double> m_contents;
+    std::variant<std::nullopt_t, bool, char, std::string, uint64_t, double> m_contents;
     size_t m_length;
     TokenType m_type;
 };

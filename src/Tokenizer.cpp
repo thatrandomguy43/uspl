@@ -1,5 +1,6 @@
 #include "IO.hpp"
 #include "Tokenizer.hpp"
+#include <ctype.h>
 #include <exception>
 #include <map>
 #include <iostream>
@@ -10,10 +11,10 @@ using namespace Tokenizer;
 const map<string, TokenType> SYMBOL_TOKEN_IDS
 {
     {"=", operator_assignment},
-    {"+", operator_plus},
-    {"-", operator_minus},
-    {"*", operator_multiply},
-    {"/", operator_divide},
+    {"+", operator_addition},
+    {"-", operator_subtraction},
+    {"*", operator_multiplication},
+    {"/", operator_division},
     {"%", operator_modulo},
     {"==", operator_equality},
     {"~=", operator_inequality},
@@ -39,6 +40,12 @@ const map<string, TokenType> SYMBOL_TOKEN_IDS
     {"{",open_brace},
     {"}",close_brace},
     {",",seperator},
+    {"#",reserved_hash},
+    {"!",reserved_exclamation},
+    {"?",reserved_questionmark},
+    {":",reserved_colon},
+    {";",reserved_semicolon},
+    
 };
 
 const map<string, TokenType> KEYWORD_TOKEN_IDS
@@ -66,59 +73,73 @@ const map<string, TokenType> KEYWORD_TOKEN_IDS
 };
 
 
-
-
 vector<Token> Tokenizer::TokenizeText(const string& text){
     vector<Token> token_list;
     for (size_t current_pos = 0; current_pos < text.size();)
     {
         Token parsed = TestForToken(text, current_pos);
         current_pos += parsed.m_length;
-        current_pos = text.find_first_not_of(" \n\r\t\v\f", current_pos);
+        while (isspace(text[current_pos])) 
+        {
+            current_pos++;
+        }
         token_list.push_back(parsed);
     }
     return token_list;
 }
 
+size_t FindNextWordTerminator(const string& text, size_t start_pos)
+{
+    while (start_pos != text.length())
+    {
+        if (SYMBOL_TOKEN_IDS.contains(text.substr(start_pos, 2)) 
+        or SYMBOL_TOKEN_IDS.contains(text.substr(start_pos, 1)) 
+        or isspace(text[start_pos]))
+        {
+            return start_pos;
+        }
+        start_pos++;
+    }
+    return start_pos;
+}
+
 Token Tokenizer::TestForToken(const string& text, size_t position)
 {
-    string potential_token = text.substr(position, 2);
-    if (SYMBOL_TOKEN_IDS.contains(potential_token))
+
+    if (SYMBOL_TOKEN_IDS.contains(text.substr(position, 2)))
     {
-        return Token{nullopt, 2, SYMBOL_TOKEN_IDS.at(potential_token)};
+        return Token{nullopt, 2, SYMBOL_TOKEN_IDS.at(text.substr(position, 2))};
     }
-    potential_token = text.substr(position, 1);
-    if (SYMBOL_TOKEN_IDS.contains(potential_token)) 
+
+    if (SYMBOL_TOKEN_IDS.contains(text.substr(position, 1))) 
     {
-        return Token{nullopt, 1, SYMBOL_TOKEN_IDS.at(potential_token)};
+        return Token{nullopt, 1, SYMBOL_TOKEN_IDS.at(text.substr(position, 1))};
     }
-    if (potential_token == "\"" or potential_token == "'" )
+    if (text[position] == '"' or text[position] == '\'')
     {
         return ProcessTextLiteral(text, position);
     }
-    if (potential_token >= "0" and potential_token <= "9" )
+    if (text[position] >= '0' and text[position] <= '9')
     {
         return ProcessNumberLiteral(text, position);
     }
-    potential_token = text.substr(position, text.find_first_of(" \n\r\t\v\f", position) - position);
-    if (KEYWORD_TOKEN_IDS.contains(potential_token))
+    string next_word = text.substr(position, FindNextWordTerminator(text, position) - position);
+    if (KEYWORD_TOKEN_IDS.contains(next_word))
     {
-        return Token{nullopt, potential_token.length(), KEYWORD_TOKEN_IDS.at(potential_token)};
+        return Token{nullopt, next_word.length(), KEYWORD_TOKEN_IDS.at(next_word)};
     }
-    if (potential_token == "false")
+    if (next_word == "false")
     {
-        return Token{"false", 5, literal_bool};
+        return Token{false, 5, literal_bool};
     }
-    if (potential_token == "true")
+    if (next_word == "true")
     {
-        return Token{"true", 4, literal_bool};
+        return Token{true, 4, literal_bool};
     }
 
 
-    return Token{potential_token, potential_token.length(), identifier};
+    return Token{next_word, next_word.length(), identifier};
 }
-
-
 
 pair<string, size_t> EscapeText(const string& text, size_t start_pos)
 {
@@ -178,9 +199,6 @@ pair<string, size_t> EscapeText(const string& text, size_t start_pos)
     return {escaped_output, idx};
 }
 
-//oh good lord no
-//this needs extreme fixing
-
 Token Tokenizer::ProcessTextLiteral(const std::string &text, size_t start_pos)
 {
     pair<string, size_t> escaped = EscapeText(text, start_pos);
@@ -222,26 +240,39 @@ Token Tokenizer::ProcessTextLiteral(const std::string &text, size_t start_pos)
 
 Token Tokenizer::ProcessNumberLiteral(const std::string &text, size_t position)
 {
-    size_t length;
+    size_t length = 0;
     if (text.substr(position, 2) == "0x")
     {
+        double value = 0;
         position += 2;
-        uint64_t value;
         try 
         {
             value = stoull(text.substr(position, string::npos), &length, 16);
         }
         catch (exception e)
         {
-
+            IO::AddError({IO::current_file, position, "Integer literal too THICC (value higher than 2^64)"});
         }
         
+
         return Token{value, length+2, literal_integer};
     } 
     else 
     {
-        
+        double float_value = stod(text.substr(position, string::npos), &length);
+        optional<uint64_t> int_value = nullopt;
+        try 
+        {
+            int_value = stoull(text.substr(position, string::npos));
+        }
+        catch (exception e){}
+        if (int_value.has_value() and int_value == float_value) 
+        {
+            return Token{int_value.value(), length, literal_integer};
+        }
+        else 
+        {
+            return Token{float_value, length, literal_float};
+        }
     }
-
-    return Token{nullopt, 1, error_token};
 }
