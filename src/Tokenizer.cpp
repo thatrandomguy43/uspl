@@ -4,6 +4,7 @@
 #include <exception>
 #include <map>
 #include <iostream>
+#include <vcruntime.h>
 
 using namespace std;
 using namespace Tokenizer;
@@ -73,16 +74,14 @@ const map<string, TokenType> KEYWORD_TOKEN_IDS
 };
 
 
-vector<Token> Tokenizer::TokenizeText(const string& text){
+vector<Token> Tokenizer::SourceFile::TokenizeText()
+{
     vector<Token> token_list;
     for (size_t current_pos = 0; current_pos < text.size();)
     {
-        Token parsed = TestForToken(text, current_pos);
+        Token parsed = TestForToken();
         current_pos += parsed.m_length;
-        while (isspace(text[current_pos])) 
-        {
-            current_pos++;
-        }
+
         token_list.push_back(parsed);
     }
     return token_list;
@@ -103,7 +102,7 @@ size_t FindNextWordTerminator(const string& text, size_t start_pos)
     return start_pos;
 }
 
-Token Tokenizer::TestForToken(const string& text, size_t position)
+Token Tokenizer::SourceFile::TestForToken()
 {
 
     if (SYMBOL_TOKEN_IDS.contains(text.substr(position, 2)))
@@ -117,11 +116,11 @@ Token Tokenizer::TestForToken(const string& text, size_t position)
     }
     if (text[position] == '"' or text[position] == '\'')
     {
-        return ProcessTextLiteral(text, position);
+        return ProcessTextLiteral();
     }
     if (text[position] >= '0' and text[position] <= '9')
     {
-        return ProcessNumberLiteral(text, position);
+        return ProcessNumberLiteral();
     }
     string next_word = text.substr(position, FindNextWordTerminator(text, position) - position);
     if (KEYWORD_TOKEN_IDS.contains(next_word))
@@ -141,8 +140,9 @@ Token Tokenizer::TestForToken(const string& text, size_t position)
     return Token{next_word, next_word.length(), identifier};
 }
 
-pair<string, size_t> EscapeText(const string& text, size_t start_pos)
+pair<string, size_t> Tokenizer::SourceFile::EscapeText()
 {
+    size_t start_pos = position;
     string escaped_output;
     size_t idx = start_pos + 1;
     while (idx < text.length() and text[idx] != '\'' and text[idx] != '"')
@@ -185,7 +185,7 @@ pair<string, size_t> EscapeText(const string& text, size_t start_pos)
                     escaped_output.append("\0");
                     break;
                 default:
-                    IO::AddError({IO::current_file, idx, "Invalid escape sequence."});
+                    IO::AddError({name, idx, "Invalid escape sequence."});
             }
             idx += 2;
         } 
@@ -199,36 +199,36 @@ pair<string, size_t> EscapeText(const string& text, size_t start_pos)
     return {escaped_output, idx};
 }
 
-Token Tokenizer::ProcessTextLiteral(const std::string &text, size_t start_pos)
+Token Tokenizer::SourceFile::ProcessTextLiteral()
 {
-    pair<string, size_t> escaped = EscapeText(text, start_pos);
-    if (text[start_pos] == '\'')
+    pair<string, size_t> escaped = EscapeText();
+    if (text[position] == '\'')
     {
         if (escaped.second >= text.length() or text[escaped.second] != '\'')
         {
-            IO::AddError({IO::current_file, start_pos, "Unclosed character literal."});
-            return Token{escaped.first, escaped.second - start_pos + 1, literal_char};
+            IO::AddError({name, position, "Unclosed character literal."});
+            return Token{escaped.first, escaped.second - position + 1, literal_char};
         }
         if (escaped.first.empty())
         {
-            IO::AddError({IO::current_file, start_pos, "Empty character literal."});
+            IO::AddError({name, position, "Empty character literal."});
             return Token{escaped.first, 2, literal_char};
         }
         if (escaped.first.length() != 1)
         {
-            IO::AddError({IO::current_file, start_pos, "Character literal contains more than 1 character."});
-            return Token{escaped.first, escaped.second - start_pos + 1, literal_char};
+            IO::AddError({name, position, "Character literal contains more than 1 character."});
+            return Token{escaped.first, escaped.second - position + 1, literal_char};
         }
-        return Token{escaped.first, escaped.second - start_pos + 1, literal_char};
+        return Token{escaped.first, escaped.second - position + 1, literal_char};
     } 
-    else if (text[start_pos] == '"')
+    else if (text[position] == '"')
     {
         if (escaped.second >= text.length() or text[escaped.second] != '\"')
         {
-            IO::AddError({IO::current_file, start_pos, "Unclosed string literal."});
-            return Token{escaped.first, escaped.second - start_pos + 1, literal_string};
+            IO::AddError({name, position, "Unclosed string literal."});
+            return Token{escaped.first, escaped.second - position + 1, literal_string};
         }
-        return Token{escaped.first, escaped.second - start_pos + 1, literal_string};
+        return Token{escaped.first, escaped.second - position + 1, literal_string};
     }
     else {
         cout << "Uhh, what happened here? In ProcessTextLiteral despite neither starting with \' or \"" << endl;
@@ -238,7 +238,7 @@ Token Tokenizer::ProcessTextLiteral(const std::string &text, size_t start_pos)
     return Token{nullopt, 1, error_token};
 }
 
-Token Tokenizer::ProcessNumberLiteral(const std::string &text, size_t position)
+Token Tokenizer::SourceFile::ProcessNumberLiteral()
 {
     size_t length = 0;
     if (text.substr(position, 2) == "0x")
@@ -251,7 +251,7 @@ Token Tokenizer::ProcessNumberLiteral(const std::string &text, size_t position)
         }
         catch (exception e)
         {
-            IO::AddError({IO::current_file, position, "Integer literal too THICC (value higher than 2^64)"});
+            IO::AddError({name, position, "Integer literal too THICC (value higher than 2^64)"});
         }
         
 

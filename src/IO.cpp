@@ -1,22 +1,26 @@
 #include "Tokenizer.hpp"
 #include "IO.hpp"
 
+#include <functional>
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <map>
 
 using namespace std;
 using namespace IO;
 
 
 set<string> IO::program_args;
-vector<IO::CompileError> IO::error_list;
-string IO::current_file;
+map<string,vector<IO::CompileError>> IO::error_list;
+
+void PrintErrors(const map<string,string>& files)
+{   
+
+}
 
 void IO::AddError(CompileError error)
 {
-    error_list.push_back(error);
+    error_list[error.filename].push_back(error);
     return;
 }
 
@@ -59,21 +63,20 @@ int main(int argc, const char** argv)
         return 0xDEE5D1CC;
     }
 
-    map<string, string> files_contents;
+    set<Tokenizer::SourceFile> file_contents;
 
     for (auto arg : program_args)
     {
         if (arg[0] != '-')
         {
-            files_contents[arg] = GetFileContents(arg);
+            file_contents.insert(Tokenizer::SourceFile{arg, GetFileContents(arg)});
         }
     }
     map<string, vector<Tokenizer::Token>> token_streams;
 
-    for (auto file : files_contents)
+    for (auto file : file_contents)
     {
-        current_file = file.first;
-        token_streams[file.first] = Tokenizer::TokenizeText(file.second);
+        token_streams[file.name] = file.TokenizeText();
     }
 
     return 0;

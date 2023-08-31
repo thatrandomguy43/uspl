@@ -1,5 +1,6 @@
 #include <string>
 #include <optional>
+#include <vcruntime.h>
 #include <vector>
 #include <variant>
 namespace Tokenizer 
@@ -93,9 +94,29 @@ class Token
     TokenType m_type;
 };
 
-std::vector<Token> TokenizeText(const std::string& text);
-Token TestForToken(const std::string& text, size_t position);
-Token ProcessTextLiteral(const std::string& text, size_t position);
-Token ProcessNumberLiteral(const std::string& text, size_t position);
+class SourceFile
+{
+    public:
+    const std::string name;
+    const std::string text;
+
+    private:
+    size_t position;
+
+    Token TestForToken();
+    Token ProcessTextLiteral();
+    Token ProcessNumberLiteral();
+    std::pair<std::string, size_t> EscapeText();
+
+    public:
+    SourceFile( const std::string& filename, const std::string& filetext) : name(filename) ,text(filetext), position(0) {}
+    bool operator<(const SourceFile& other) const
+    {
+        return this->name < other.name;
+    }
+    std::vector<Token> TokenizeText();
+};
+
+
 
 }

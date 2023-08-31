@@ -1,6 +1,6 @@
 var int32 loul = "hello\n"
 
-const sus amog=vent+3
+const sus amog=vent+3.55.2aaa#
 
 while () do
 
