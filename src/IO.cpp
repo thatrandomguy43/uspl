@@ -15,7 +15,7 @@ map<string,vector<IO::CompileError>> IO::error_list;
 
 void PrintErrors(const map<string,string>& files)
 {   
-
+    
 }
 
 void IO::AddError(CompileError error)
@@ -24,7 +24,7 @@ void IO::AddError(CompileError error)
     return;
 }
 
-set<string> IO::GrabCLIArguments(int argc, const char** argv)
+set<string> GrabCLIArguments(int argc, const char** argv)
 {
     set<string> args_vec;
     for (int argument_index = 1; argument_index < argc; argument_index++)
@@ -34,7 +34,7 @@ set<string> IO::GrabCLIArguments(int argc, const char** argv)
     return args_vec;
 }
 
-string IO::GetFileContents(string filename)
+string GetFileContents(string filename)
 {
     fstream file_in;
     file_in.open(filename, ios::in);
@@ -63,16 +63,16 @@ int main(int argc, const char** argv)
         return 0xDEE5D1CC;
     }
 
-    set<Tokenizer::SourceFile> file_contents;
+    set<SourceFile> file_contents;
 
     for (auto arg : program_args)
     {
         if (arg[0] != '-')
         {
-            file_contents.insert(Tokenizer::SourceFile{arg, GetFileContents(arg)});
+            file_contents.insert( SourceFile{arg, GetFileContents(arg)});
         }
     }
-    map<string, vector<Tokenizer::Token>> token_streams;
+    map<string, vector<Token>> token_streams;
 
     for (auto file : file_contents)
     {

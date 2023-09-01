@@ -7,7 +7,6 @@
 #include <vcruntime.h>
 
 using namespace std;
-using namespace Tokenizer;
 //oh the horror! TWO using namespaces!
 const map<string, TokenType> SYMBOL_TOKEN_IDS
 {
@@ -74,7 +73,7 @@ const map<string, TokenType> KEYWORD_TOKEN_IDS
 };
 
 
-vector<Token> Tokenizer::SourceFile::TokenizeText()
+vector<Token> SourceFile::TokenizeText()
 {
     vector<Token> token_list;
     for (size_t current_pos = 0; current_pos < text.size();)
@@ -102,7 +101,7 @@ size_t FindNextWordTerminator(const string& text, size_t start_pos)
     return start_pos;
 }
 
-Token Tokenizer::SourceFile::TestForToken()
+Token SourceFile::TestForToken()
 {
 
     if (SYMBOL_TOKEN_IDS.contains(text.substr(position, 2)))
@@ -140,7 +139,7 @@ Token Tokenizer::SourceFile::TestForToken()
     return Token{next_word, next_word.length(), identifier};
 }
 
-pair<string, size_t> Tokenizer::SourceFile::EscapeText()
+pair<string, size_t> SourceFile::EscapeText()
 {
     size_t start_pos = position;
     string escaped_output;
@@ -199,7 +198,7 @@ pair<string, size_t> Tokenizer::SourceFile::EscapeText()
     return {escaped_output, idx};
 }
 
-Token Tokenizer::SourceFile::ProcessTextLiteral()
+Token SourceFile::ProcessTextLiteral()
 {
     pair<string, size_t> escaped = EscapeText();
     if (text[position] == '\'')
@@ -238,7 +237,7 @@ Token Tokenizer::SourceFile::ProcessTextLiteral()
     return Token{nullopt, 1, error_token};
 }
 
-Token Tokenizer::SourceFile::ProcessNumberLiteral()
+Token SourceFile::ProcessNumberLiteral()
 {
     size_t length = 0;
     if (text.substr(position, 2) == "0x")

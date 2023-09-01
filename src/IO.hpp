@@ -11,8 +11,6 @@ namespace IO {
     };
     extern std::set<std::string> program_args;
     extern std::map<std::string, std::vector<CompileError>> error_list;
-    std::set<std::string> GrabCLIArguments(int argc, const char** argv);
-    std::string GetFileContents(std::string filepath);
     void AddError(CompileError error);
 
 }

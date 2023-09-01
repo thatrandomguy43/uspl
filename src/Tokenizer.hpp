@@ -3,8 +3,7 @@
 #include <vcruntime.h>
 #include <vector>
 #include <variant>
-namespace Tokenizer 
-{
+
 enum TokenType
 {
     identifier,
@@ -116,7 +115,3 @@ class SourceFile
     }
     std::vector<Token> TokenizeText();
 };
-
-
-
-}
