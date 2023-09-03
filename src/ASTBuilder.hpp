@@ -1,13 +1,82 @@
+#include <functional>
 #include <string>
 #include <vector>
 #include <variant>
 #include <memory>
 
-//this is so i can replace it with something  more appropriate if i later find something
-using type_id = std::string;
 
-class Variable
+
+class UnqualifiedType 
+{
+    public:
+    std::string id;
+};
+class SymbolNameExpression
 {
     std::string name;
-    type_id type_name;
+};
+class LiteralExpression
+{
+    std::variant<bool, char, std::string, uint64_t, double> value;
+};
+class VariableType
+{
+    public:
+    UnqualifiedType base;
+};
+class Expression
+{
+    public:
+    std::unique_ptr<std::variant<SymbolNameExpression, LiteralExpression>> value;
+    VariableType type;
+};
+class BlockStatement;
+class AssignmentStatement
+{
+    std::string target_name;
+    std::unique_ptr<Expression> value; 
+};
+class Statement
+{
+    std::unique_ptr<std::variant<BlockStatement, AssignmentStatement>> w;
+};
+class BlockStatement
+{
+    std::vector<Statement> statements;
+};
+
+class VariableDeclaration
+{
+    public:
+    std::string name;
+    VariableType type;
+};
+class VariableDefinition
+{
+    public:
+    VariableDeclaration declation;
+    Expression value;
+};
+class FunctionType
+{
+    public:
+    UnqualifiedType return_type;
+    std::vector<UnqualifiedType> parameter_types;
+};
+class FunctionDeclaration
+{
+    public:
+    std::string name;
+    FunctionType type;
+};
+class FunctionDefinition
+{
+    public:
+    FunctionDeclaration declation;
+    BlockStatement body;
+};
+class TranslationUnit
+{
+    public:
+    std::vector<Statement> statements;
 };

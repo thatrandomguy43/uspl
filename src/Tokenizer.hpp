@@ -88,9 +88,9 @@ enum TokenType
 class Token
 {
     public:
-    std::variant<std::nullopt_t, bool, char, std::string, uint64_t, double> m_contents;
-    size_t m_length;
-    TokenType m_type;
+    std::variant<std::nullopt_t, bool, char, std::string, uint64_t, double> contents;
+    size_t length;
+    TokenType type;
 };
 
 class SourceFile

@@ -84,7 +84,7 @@ vector<Token> SourceFile::TokenizeText()
             position++;
         }
         Token parsed = TestForToken();
-        position += parsed.m_length;
+        position += parsed.length;
         token_list.push_back(parsed);
     }
     return token_list;
