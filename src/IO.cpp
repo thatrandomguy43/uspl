@@ -1,21 +1,40 @@
 #include "Tokenizer.hpp"
 #include "IO.hpp"
-
-#include <functional>
+#include <format>
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <chrono>
 
 using namespace std;
 using namespace IO;
 
 
 set<string> IO::program_args;
-map<string,vector<IO::CompileError>> IO::error_list;
+map<string,vector<IO::CompileError>> error_list;
 
-void PrintErrors(const map<string,string>& files)
-{   
-    
+void PrintErrors(const set<SourceFile>& files)
+{
+    for (auto file : files)
+    {
+        size_t line_num = 1;
+        size_t char_num = 1;
+        size_t index = 0;
+        for (auto error : error_list[file.name])
+        {
+            while (index != error.position) {
+                index++;
+                char_num++;
+                if (file.text[index] == '\n')
+                {
+                    line_num++;
+                    char_num = 0;
+                }
+            }
+            cout << format("Error at ({}, {}) in {}: {}", line_num, char_num, error.filename, error.error_msg) << endl;
+        }
+    }
+    return;
 }
 
 void IO::AddError(CompileError error)
@@ -56,6 +75,8 @@ string GetFileContents(string filename)
 
 int main(int argc, const char** argv)
 {
+    auto start_time = chrono::high_resolution_clock::now();
+    
     program_args = GrabCLIArguments(argc, argv);
 
     if (program_args.size() == 0){
@@ -79,5 +100,8 @@ int main(int argc, const char** argv)
         token_streams[file.name] = file.TokenizeText();
     }
 
+    auto end_time = chrono::high_resolution_clock::now();
+    auto time_elapsed = end_time - start_time;
+    cout << "Time elapsed: " << chrono::duration_cast<chrono::milliseconds>(time_elapsed) << endl;
     return 0;
 }

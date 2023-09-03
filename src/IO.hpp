@@ -10,7 +10,6 @@ namespace IO {
         std::string error_msg;
     };
     extern std::set<std::string> program_args;
-    extern std::map<std::string, std::vector<CompileError>> error_list;
     void AddError(CompileError error);
 
 }

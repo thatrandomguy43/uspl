@@ -76,11 +76,15 @@ const map<string, TokenType> KEYWORD_TOKEN_IDS
 vector<Token> SourceFile::TokenizeText()
 {
     vector<Token> token_list;
-    for (size_t current_pos = 0; current_pos < text.size();)
-    {
-        Token parsed = TestForToken();
-        current_pos += parsed.m_length;
+    while (position < text.size())
+    {   
 
+        while (isspace(text[position])) 
+        {
+            position++;
+        }
+        Token parsed = TestForToken();
+        position += parsed.m_length;
         token_list.push_back(parsed);
     }
     return token_list;
