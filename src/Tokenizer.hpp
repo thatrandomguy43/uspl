@@ -1,6 +1,5 @@
 #include <string>
 #include <optional>
-#include <vcruntime.h>
 #include <vector>
 #include <variant>
 

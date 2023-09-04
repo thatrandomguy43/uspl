@@ -102,3 +102,22 @@ i will probably have to just panic if accessed wrong, at least for now
 
 exceptions are cringe (and a super pain in the ass from a compiler perspective i think)
 
+
+for self
+
+literal := LiteralInt | LiteralFloat | LiteralChar | LiteralString | LiteralBool
+expr := literal | expr binop expr | unop expr | functioncall
+binop := `and` | `or` | `+` | `-` | `*` | `/` | `%` | `==`| `~=`| `<=`| `>=` | `<` | `>` | `&`| `|` | `^` | `<<` | `>>`
+unop ::=  `-` | `not` | `~` | `$`
+functioncall := Name `(`[ expr {`,` expr}]`)`
+reference := Name | reference `.` Name | pointerderef
+stat := assignment | vardef | functiondef | externaldecl | functioncall | blockstat | returnstat | `break`
+block := `do` {stat} `end`
+blockstat := ifstat | whilestat | forstat | block
+ifstat := `if` expr block {`else if` expr block} [`else` block]
+whilestat := `while` expr block
+assignment := reference `=` expr
+vardef := (´var´ | ´const´) TypeName{`$`}[£] Name ´=´ expr
+functiondef := TypeName `(`[TypeName Name {´,´ TypeName Name}]`)` Name block
+
+this crap is a lot already, a lot of stuff refering to shit thats not gonna be supported for a while

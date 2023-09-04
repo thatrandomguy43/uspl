@@ -3,7 +3,7 @@
 #include <vector>
 #include <variant>
 #include <memory>
-
+#include "Tokenizer.hpp"
 
 
 class UnqualifiedType 
@@ -75,8 +75,9 @@ class FunctionDefinition
     FunctionDeclaration declation;
     BlockStatement body;
 };
-class TranslationUnit
+class TranslationUnitAST
 {
     public:
+    TranslationUnitAST(const std::vector<Token>&);
     std::vector<Statement> statements;
 };
