@@ -32,7 +32,7 @@ The two keywords var and const are used to create a variable. If var is used, th
 
 Defining a variable then looks like this:
 
-(´var´ | ´const´) type name ´=´ expression
+(`var` | `const`) type name `=` expression
 
 Unlike in C++, I should make sure assignmets do not return a value, so you can't make the if (x=5) mistake. 
 NTS: This part will need updating once pointers and references are added.
@@ -41,7 +41,7 @@ NTS: This part will need updating once pointers and references are added.
 
 Functions operate in a pretty standard C++-like manner. They are defined with the following syntax:
 
-type ([type name {´,´ type name}]) name funcbody
+type ([type name {`,` type name}]) name funcbody
 
 The first type is the return type, with the subsequent variables being parameters. 
 
@@ -117,7 +117,7 @@ blockstat := ifstat | whilestat | forstat | block
 ifstat := `if` expr block {`else if` expr block} [`else` block]
 whilestat := `while` expr block
 assignment := reference `=` expr
-vardef := (´var´ | ´const´) TypeName{`$`}[£] Name ´=´ expr
-functiondef := TypeName `(`[TypeName Name {´,´ TypeName Name}]`)` Name block
+vardef := (`var` | `const`) TypeName{`$`}[`£`] Name `=` expr
+functiondef := TypeName `(`[TypeName Name {`,` TypeName Name}]`)` Name block
 
 this crap is a lot already, a lot of stuff refering to shit thats not gonna be supported for a while

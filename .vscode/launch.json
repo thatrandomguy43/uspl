@@ -9,7 +9,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/uspl_compiler.exe",
-            "args": ["${workspaceFolder}/testin.txt"],
+            "args": ["${workspaceFolder}/testin.uspl"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
