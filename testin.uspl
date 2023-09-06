@@ -1,7 +1,5 @@
-var int32 loul = "hello\n"
-
-const sus amog=vent+3.55.2aaa#
-''
-while () do
-
+function int32() main = do
+    int32 x = 4
+    int32 y = x + 2
+    return y
 end

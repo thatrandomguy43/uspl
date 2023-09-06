@@ -2,7 +2,8 @@
 #include <optional>
 #include <vector>
 #include <variant>
-
+#ifndef TOKENIZER_HPP
+#define TOKENIZER_HPP
 enum TokenType
 {
     identifier,
@@ -84,12 +85,16 @@ enum TokenType
 
     //ones i can think of rn, some of these will take a while to be added
 };
+
 class Token
 {
     public:
     std::variant<std::nullopt_t, bool, char, std::string, uint64_t, double> contents;
     size_t length;
+    size_t file_position;
     TokenType type;
+    Token(std::variant<std::nullopt_t, bool, char, std::string, uint64_t, double> contnt, size_t len, TokenType tp)
+     : contents(contnt), length(len), type(tp) {} 
 };
 
 class SourceFile
@@ -114,3 +119,4 @@ class SourceFile
     }
     std::vector<Token> TokenizeText();
 };
+#endif

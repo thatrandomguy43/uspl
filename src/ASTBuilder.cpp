@@ -1,12 +1,30 @@
+#include "ASTBuilder.hpp"
+#include "IO.hpp"
+using namespace AST;
+using namespace std;
 
 
-int x = 5;
-int y = 2+(x*x);
 
-int poop(float zaza, char xzzzx){
-    while (zaza < 4.2)
+AST::TranslationUnit& ASTBuilder::BuildFile(const std::vector<Token>& token_source, std::string source_filename)
+{
+    tokens = token_source;
+    filename = source_filename;
+    while (token_index != tokens.size())
     {
-        zaza += 1;
+        switch (tokens[token_index].type) 
+        {
+            case keyword_var:
+                root.statements.push_back({});
+                root.statements.back().type = make_unique<variant<BlockStatement, AssignmentStatement, VariableDefinition, FunctionDefinition>>();
+            break;
+            case keyword_const:
+            break;
+            case keyword_function:
+            break;
+            default:
+            IO::AddError({filename, tokens[token_index].file_position, "Token not expected (or, as it is, not implemented yet) at file scope."});
+            break;
+        }
     }
-    return x;
+    return root;
 }

@@ -1,10 +1,17 @@
-#include <functional>
 #include <string>
 #include <vector>
 #include <variant>
 #include <memory>
 #include "Tokenizer.hpp"
 
+namespace AST
+{
+
+
+class BlockStatement;
+class AssignmentStatement;
+class VariableDefinition;
+class FunctionDefinition;
 
 class UnqualifiedType 
 {
@@ -30,31 +37,26 @@ class Expression
     std::unique_ptr<std::variant<SymbolNameExpression, LiteralExpression>> value;
     VariableType type;
 };
-class BlockStatement;
+class Statement
+{
+    public:
+    std::unique_ptr<std::variant<BlockStatement, AssignmentStatement, VariableDefinition, FunctionDefinition>> type;
+};
 class AssignmentStatement
 {
     std::string target_name;
     std::unique_ptr<Expression> value; 
-};
-class Statement
-{
-    std::unique_ptr<std::variant<BlockStatement, AssignmentStatement>> w;
 };
 class BlockStatement
 {
     std::vector<Statement> statements;
 };
 
-class VariableDeclaration
+class VariableDefinition
 {
     public:
     std::string name;
     VariableType type;
-};
-class VariableDefinition
-{
-    public:
-    VariableDeclaration declation;
     Expression value;
 };
 class FunctionType
@@ -63,21 +65,29 @@ class FunctionType
     UnqualifiedType return_type;
     std::vector<UnqualifiedType> parameter_types;
 };
-class FunctionDeclaration
-{
-    public:
-    std::string name;
-    FunctionType type;
-};
+
 class FunctionDefinition
 {
     public:
-    FunctionDeclaration declation;
+    FunctionType declation;
+    std::string name;
+    std::vector<std::string> param_names;
     BlockStatement body;
 };
-class TranslationUnitAST
+class TranslationUnit
 {
     public:
-    TranslationUnitAST(const std::vector<Token>&);
     std::vector<Statement> statements;
+};
+
+}
+
+class ASTBuilder    
+{
+    std::string filename;
+    std::vector<Token> tokens;
+    size_t token_index = 0;
+    public:
+    AST::TranslationUnit root;
+    AST::TranslationUnit& BuildFile(const std::vector<Token>&, std::string);                                                                     
 };

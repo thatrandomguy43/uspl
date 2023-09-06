@@ -41,7 +41,7 @@ NTS: This part will need updating once pointers and references are added.
 
 Functions operate in a pretty standard C++-like manner. They are defined with the following syntax:
 
-type ([type name {`,` type name}]) name funcbody
+type ([type name {`,` type name}]) name `=` funcbody
 
 The first type is the return type, with the subsequent variables being parameters. 
 
@@ -111,13 +111,13 @@ binop := `and` | `or` | `+` | `-` | `*` | `/` | `%` | `==`| `~=`| `<=`| `>=` | `
 unop ::=  `-` | `not` | `~` | `$`
 functioncall := Name `(`[ expr {`,` expr}]`)`
 reference := Name | reference `.` Name | pointerderef
-stat := assignment | vardef | functiondef | externaldecl | functioncall | blockstat | returnstat | `break`
+stat := assignment | vardef | functiondef | externaldecl | functioncall | blockstat | returnstat | breakstat
 block := `do` {stat} `end`
 blockstat := ifstat | whilestat | forstat | block
 ifstat := `if` expr block {`else if` expr block} [`else` block]
 whilestat := `while` expr block
 assignment := reference `=` expr
 vardef := (`var` | `const`) TypeName{`$`}[`£`] Name `=` expr
-functiondef := TypeName `(`[TypeName Name {`,` TypeName Name}]`)` Name block
-
+functiondef := TypeName `(`[TypeName Name {`,` TypeName Name}]`)` Name `=` block
+file := {vardef | functiondef | externdecl}
 this crap is a lot already, a lot of stuff refering to shit thats not gonna be supported for a while
