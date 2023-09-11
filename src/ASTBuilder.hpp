@@ -47,7 +47,9 @@ class SymbolNameExpression;
 class UnaryExpression;
 class BinaryExpression;
 
-using LiteralExpression = std::variant<bool, char, std::string, uint64_t, double>;
+//the nullopt is just so i dont get a compile error when assingnning the contents of a literal value token to it
+//the compiler dosent know that nullopt does not happen if the token type is a literal
+using LiteralExpression = std::variant<std::nullopt_t, bool, uint64_t, double, char, std::string>;
 class UnqualifiedType 
 {
     public:

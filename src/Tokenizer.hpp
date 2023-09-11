@@ -84,12 +84,13 @@ enum TokenType
 
 class Token
 {
+    using LiteralExpression = std::variant<std::nullopt_t, bool, uint64_t, double, char, std::string>;
     public:
-    std::variant<std::nullopt_t, bool, char, std::string, uint64_t, double> contents;
+    std::variant<LiteralExpression> contents;
     size_t length;
     size_t file_position;
     TokenType type;
-    Token(std::variant<std::nullopt_t, bool, char, std::string, uint64_t, double> contnt, size_t len, TokenType tp)
+    Token(LiteralExpression contnt, size_t len, TokenType tp)
      : contents(contnt), length(len), type(tp) {} 
 };
 
