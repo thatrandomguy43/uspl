@@ -133,11 +133,11 @@ Token SourceFile::TestForToken()
     }
     if (next_word == "false")
     {
-        return Token{false, 5, literal_bool};
+        return Token{false, 5, literal_value};
     }
     if (next_word == "true")
     {
-        return Token{true, 4, literal_bool};
+        return Token{true, 4, literal_value};
     }
 
 
@@ -211,28 +211,28 @@ Token SourceFile::ProcessTextLiteral()
         if (escaped.second >= text.length() or text[escaped.second] != '\'')
         {
             IO::AddError({name, position, "Unclosed character literal."});
-            return Token{escaped.first, escaped.second - position + 1, literal_char};
+            return Token{escaped.first, escaped.second - position + 1, literal_value};
         }
         if (escaped.first.empty())
         {
             IO::AddError({name, position, "Empty character literal."});
-            return Token{escaped.first, 2, literal_char};
+                return Token{nullopt, 2, error_token};
         }
         if (escaped.first.length() != 1)
         {
             IO::AddError({name, position, "Character literal contains more than 1 character."});
-            return Token{escaped.first, escaped.second - position + 1, literal_char};
+            return Token{nullopt, escaped.second - position + 1, error_token};
         }
-        return Token{escaped.first, escaped.second - position + 1, literal_char};
+        return Token{escaped.first[0], escaped.second - position + 1, literal_value};
     } 
     else if (text[position] == '"')
     {
         if (escaped.second >= text.length() or text[escaped.second] != '\"')
         {
             IO::AddError({name, position, "Unclosed string literal."});
-            return Token{escaped.first, escaped.second - position + 1, literal_string};
+            return Token{escaped.first, escaped.second - position + 1, literal_value};
         }
-        return Token{escaped.first, escaped.second - position + 1, literal_string};
+        return Token{escaped.first, escaped.second - position + 1, literal_value};
     }
     else {
         cout << "Uhh, what happened here? In ProcessTextLiteral despite neither starting with \' or \"" << endl;
@@ -259,7 +259,7 @@ Token SourceFile::ProcessNumberLiteral()
         }
         
 
-        return Token{value, length+2, literal_integer};
+        return Token{value, length+2, literal_value};
     } 
     else 
     {
@@ -272,11 +272,11 @@ Token SourceFile::ProcessNumberLiteral()
         catch (exception e){}
         if (int_value.has_value() and int_value == float_value) 
         {
-            return Token{int_value.value(), length, literal_integer};
+            return Token{int_value.value(), length, literal_value};
         }
         else 
         {
-            return Token{float_value, length, literal_float};
+            return Token{float_value, length, literal_value};
         }
     }
 }

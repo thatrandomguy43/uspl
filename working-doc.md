@@ -106,7 +106,7 @@ exceptions are cringe (and a super pain in the ass from a compiler perspective i
 for self
 
 literal := LiteralInt | LiteralFloat | LiteralChar | LiteralString | LiteralBool
-expr := literal | expr binop expr | unop expr | functioncall
+expr := literal | expr binop expr | unop expr | functioncall | Name
 binop := `and` | `or` | `+` | `-` | `*` | `/` | `%` | `==`| `~=`| `<=`| `>=` | `<` | `>` | `&`| `|` | `^` | `<<` | `>>`
 unop ::=  `-` | `not` | `~` | `$`
 functioncall := Name `(`[ expr {`,` expr}]`)`

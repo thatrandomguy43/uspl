@@ -8,11 +8,7 @@ enum TokenType
 {
     identifier,
 
-    literal_bool,
-    literal_integer,
-    literal_float,
-    literal_char,
-    literal_string,
+    literal_value,
 
     operator_assignment,
     keyword_var,
