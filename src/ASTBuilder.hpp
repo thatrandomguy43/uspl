@@ -27,15 +27,27 @@ enum BinaryOpType
     greaterthan,
     lessthan_equals,
     greaterthan_equals,
-
-
 };
+
+enum UnaryOpType
+{
+    minus,
+    bit_not,
+    logic_not,
+    address,
+    dereference,
+};
+
 
 class BlockStatement;
 class AssignmentStatement;
 class VariableDefinition;
 class FunctionDefinition;
+class SymbolNameExpression;
+class UnaryExpression;
+class BinaryExpression;
 
+using LiteralExpression = std::variant<bool, char, std::string, uint64_t, double>;
 class UnqualifiedType 
 {
     public:
@@ -47,40 +59,55 @@ class VariableType
     UnqualifiedType base;
     bool is_const;
 };
-class SymbolNameExpression
-{
-    std::string name;
-    VariableType type;
-};
-using LiteralExpression = std::variant<bool, char, std::string, uint64_t, double>;
-class BinaryOperation
-{
-    std::string name;
-    VariableType type;
-};
-class UnaryOperation
-{
-    std::string name;
-    VariableType type;
-};
 class Expression
 {
     public:
-    std::unique_ptr<std::variant<SymbolNameExpression, LiteralExpression>> value;
+    std::unique_ptr<std::variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression>> value;
     VariableType type;
 };
+class SymbolNameExpression
+{
+    public:
+    std::string name;
+    VariableType type;
+};
+
+class BinaryExpression
+{
+    public:
+    std::string name;
+    BinaryOpType operation;
+    VariableType type;
+};
+class UnaryExpression
+{
+    public:
+    Expression operand;
+    UnaryOpType operation;
+    VariableType type;
+};
+
 using Statement = std::unique_ptr<std::variant<BlockStatement, AssignmentStatement, VariableDefinition, FunctionDefinition>>;
 class AssignmentStatement
 {
+    public:
     std::string target_name;
     std::unique_ptr<Expression> value; 
 };
 class BlockStatement
 {
+    public:
     std::vector<Statement> statements;
+};
+class IfStatement
+{
+    public:
+    BlockStatement content;
+    Expression condition;
 };
 class WhileLoop
 {
+    public:
     BlockStatement content;
     Expression condition;
 };

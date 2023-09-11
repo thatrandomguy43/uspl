@@ -8,10 +8,37 @@ using namespace std;
 Expression ASTBuilder::MakeExpression()
 {
     Expression expr;
-    if (tokens[token_index].type == literal_value)
+    if (tokens[token_index].type == open_parentheses)
     {
-
+        token_index++;
     }
+    bool is_unary = true;
+    switch (tokens[token_index].type) 
+    {
+        case operator_bitwise_not:
+            expr.value = make_unique<std::variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression>>(UnaryExpression{});
+            get<UnaryExpression>(*expr.value).operation = bit_not;
+        break;
+        case operator_logical_not:
+            expr.value = make_unique<std::variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression>>(UnaryExpression{});
+            get<UnaryExpression>(*expr.value).operation = logic_not;
+        break;
+        case operator_address:
+            expr.value = make_unique<std::variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression>>(UnaryExpression{});
+            get<UnaryExpression>(*expr.value).operation = address;
+        break;
+        case operator_pointer:
+            expr.value = make_unique<std::variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression>>(UnaryExpression{});
+            get<UnaryExpression>(*expr.value).operation = dereference;
+        break;
+        case operator_subtraction:
+            expr.value = make_unique<std::variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression>>(UnaryExpression{});
+            get<UnaryExpression>(*expr.value).operation = AST::minus;
+        break;
+        default:
+        is_unary = false;
+    }
+    
     return expr;
 }
 

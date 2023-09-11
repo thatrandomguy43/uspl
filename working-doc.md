@@ -55,6 +55,10 @@ blocks are started with do and ended with end like lua
 
 the keywords and, or and not are used for boolean logic instead of operators
 
+i think i'm gonna have to do oops all parentheses for binary operators so 3 * 4 + 2 must be (3 * 4) + 2
+not doing that would mean i have to deal with operator presidence and introduce behaviour that is hard to program and easy to misunderstand 
+
+
 if statements look like:
 
 if exp do
@@ -71,27 +75,10 @@ end
 for loops are not decided yet, what do i actually want? c++ for loops are just while loops with a fancy hat, and foreach/iterator loops are hard to understand
 
 
-literals 
-
-bool has
-true
-false
-
-int64 has
-any number without a decimal point
-
-float64 has
-any number with a decimal point
-
-char has
-single quoted char literals
-c style string literals
 
 i want to avoid type inference, because it makes my job harder and creates WTFs like c++ overload resolution
 
 i should then not have to worry about literal typing, because you can't deduce a type from them
-
-types the when combine
 
 classes should be there, though with only interface inheritance
 c++ const methods are cool
@@ -103,12 +90,15 @@ i will probably have to just panic if accessed wrong, at least for now
 exceptions are cringe (and a super pain in the ass from a compiler perspective i think)
 
 
+
+
+
 for self
 
 literal := LiteralInt | LiteralFloat | LiteralChar | LiteralString | LiteralBool
 expr := literal | expr binop expr | unop expr | functioncall | Name
 binop := `and` | `or` | `+` | `-` | `*` | `/` | `%` | `==`| `~=`| `<=`| `>=` | `<` | `>` | `&`| `|` | `^` | `<<` | `>>`
-unop ::=  `-` | `not` | `~` | `$`
+unop ::=  `-` | `not` | `~` | `$` | `@`
 functioncall := Name `(`[ expr {`,` expr}]`)`
 reference := Name | reference `.` Name | pointerderef
 stat := assignment | vardef | functiondef | externaldecl | functioncall | blockstat | returnstat | breakstat

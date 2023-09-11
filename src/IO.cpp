@@ -77,7 +77,9 @@ string GetFileContents(string filename)
 int main(int argc, const char** argv)
 {
     auto start_time = chrono::high_resolution_clock::now();
-    
+
+    int x = 2 + 3 & 4;
+
     program_args = GrabCLIArguments(argc, argv);
 
     if (program_args.size() == 0){
