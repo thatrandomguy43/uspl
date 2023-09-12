@@ -96,7 +96,9 @@ exceptions are cringe (and a super pain in the ass from a compiler perspective i
 for self
 
 literal := LiteralInt | LiteralFloat | LiteralChar | LiteralString | LiteralBool
-expr := literal | expr binop expr | unop expr | functioncall | Name
+expr := simplexpr | complexpr
+simplexpr := literal | Name
+complexpr := (simplexpr | `(` complexpr `)`) binop (simplexpr | `(` complexpr `)`) | unop (simplexpr | `(` complexpr `)`) | functioncall 
 binop := `and` | `or` | `+` | `-` | `*` | `/` | `%` | `==`| `~=`| `<=`| `>=` | `<` | `>` | `&`| `|` | `^` | `<<` | `>>`
 unop ::=  `-` | `not` | `~` | `$` | `@`
 functioncall := Name `(`[ expr {`,` expr}]`)`

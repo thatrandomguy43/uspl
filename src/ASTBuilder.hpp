@@ -31,7 +31,7 @@ enum BinaryOpType
 
 enum UnaryOpType
 {
-    minus,
+    negation,
     bit_not,
     logic_not,
     address,
@@ -46,14 +46,14 @@ class FunctionDefinition;
 class SymbolNameExpression;
 class UnaryExpression;
 class BinaryExpression;
-
+class FunctionCallExpression;
 //the nullopt is just so i dont get a compile error when assingnning the contents of a literal value token to it
 //the compiler dosent know that nullopt does not happen if the token type is a literal
 using LiteralExpression = std::variant<std::nullopt_t, bool, uint64_t, double, char, std::string>;
 class UnqualifiedType 
 {
     public:
-    std::string id;
+    std::string identifier;
 };
 class VariableType
 {
@@ -64,7 +64,7 @@ class VariableType
 class Expression
 {
     public:
-    std::unique_ptr<std::variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression>> value;
+    std::unique_ptr<std::variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression, FunctionCallExpression>> value;
     VariableType type;
 };
 class SymbolNameExpression
@@ -77,7 +77,8 @@ class SymbolNameExpression
 class BinaryExpression
 {
     public:
-    std::string name;
+    Expression left_operand;
+    Expression right_operand;
     BinaryOpType operation;
     VariableType type;
 };
@@ -88,13 +89,18 @@ class UnaryExpression
     UnaryOpType operation;
     VariableType type;
 };
-
+class FunctionCallExpression
+{
+    public:
+    std::string identifier;
+    std::vector<Expression> args;
+};
 using Statement = std::unique_ptr<std::variant<BlockStatement, AssignmentStatement, VariableDefinition, FunctionDefinition>>;
 class AssignmentStatement
 {
     public:
     std::string target_name;
-    std::unique_ptr<Expression> value; 
+    Expression value; 
 };
 class BlockStatement
 {
@@ -126,12 +132,16 @@ class FunctionType
     VariableType return_type;
     std::vector<VariableType> parameter_types;
 };
-
+class FunctionDeclaration
+{
+    public:
+    FunctionType type;
+    std::string name;
+};
 class FunctionDefinition
 {
     public:
-    FunctionType declation;
-    std::string name;
+    FunctionDeclaration declation;
     std::vector<std::string> param_names;
     BlockStatement body;
 };
@@ -147,10 +157,16 @@ class ASTBuilder
 {
     std::string filename;
     std::vector<Token> tokens;
-    size_t token_index = 0;
-    public:
-    AST::TranslationUnit root;
+    size_t token_index;
+
+    AST::FunctionCallExpression MakeFunctionCallExpression();
+    AST::BinaryExpression MakeBinaryExpression();
+    AST::UnaryExpression MakeUnaryExpression();
     AST::Expression MakeExpression();
     AST::VariableDefinition MakeVariableDefinition();
+    public:
+    AST::TranslationUnit root;
+
+
     AST::TranslationUnit& BuildFile(const std::vector<Token>&, std::string);                                                                     
 };

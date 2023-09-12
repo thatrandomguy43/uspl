@@ -4,84 +4,186 @@
 using namespace AST;
 using namespace std;
 
+const map<TokenType, UnaryOpType> UNARY_OPERATORS
+{
+   {operator_bitwise_not, AST::bit_not},
+   {operator_logical_not, logic_not},
+   {operator_pointer, dereference},
+   {operator_address, address},
+   {operator_subtraction, AST::negation}
+};
+const map<TokenType, BinaryOpType> BINARY_OPERATORS
+{
+    {operator_addition, addition},
+    {operator_subtraction, subtraction},
+    {operator_multiplication, multiplication},
+    {operator_division, division},
+    {operator_modulo, modulo},
+    {operator_bitwise_and, AST::bit_and},
+    {operator_bitwise_or, AST::bit_or},
+    {operator_bitwise_xor, AST::bit_xor},
+    {operator_shift_left, bitshift_left},
+    {operator_shift_right, bitshift_right},
+    {operator_logical_and, logic_and},
+    {operator_logical_or, logic_or},
+    {operator_equality, equals},
+    {operator_inequality, notequals},
+    {operator_lessthan, lessthan},
+    {operator_greaterthan, greaterthan},
+    {operator_less_or_equal, lessthan_equals},
+    {operator_greater_or_equal, greaterthan_equals}
+};
+
+
+
+FunctionCallExpression ASTBuilder::MakeFunctionCallExpression()
+{
+    FunctionCallExpression expr;
+    if (tokens[token_index].type == identifier)
+    {
+        expr.identifier = get<string>(tokens[token_index].contents);
+    } 
+    else 
+    {
+        IO::AddError({filename, tokens[token_index].file_position, "Expected identifier in function call expression"});
+    }
+    token_index++;
+    if (tokens[token_index].type == open_parentheses) 
+    {
+        cout << "Uhh, what? Why are we here if this token wasn't an opening parentheses? ASTBuilder::MakeFunctionCallExpression" << endl;
+    }
+    token_index++;
+    while (tokens[token_index].type != close_parentheses) 
+    {
+        expr.args.push_back(MakeExpression());
+        if (tokens[token_index].type == seperator)
+        {
+            token_index++;
+        } else 
+        {
+            IO::AddError({filename, tokens[token_index].file_position, "Missing \',\' between function arguments."});
+        }
+    }
+    token_index++;
+    return expr;
+}
+BinaryExpression ASTBuilder::MakeBinaryExpression()
+{
+    BinaryExpression expr;
+    if (tokens[token_index].type == open_parentheses)
+    {
+        token_index++;
+        expr.left_operand = MakeExpression();
+        if (tokens[token_index].type != close_parentheses)
+        {
+            IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' here to close expression."});
+        }
+        token_index++;
+    } 
+    else 
+    {
+        expr.left_operand = MakeExpression();
+    }
+    expr.operation = BINARY_OPERATORS.at(tokens[token_index].type);
+    token_index++;
+    if (tokens[token_index].type == open_parentheses)
+    {
+        token_index++;
+        expr.right_operand = MakeExpression();
+        if (tokens[token_index].type != close_parentheses)
+        {
+            IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' here to close expression."});
+        }
+        token_index++;
+    } 
+    else 
+    {
+        expr.right_operand = MakeExpression();
+    }
+    return expr;
+}
+UnaryExpression ASTBuilder::MakeUnaryExpression()
+{
+    UnaryExpression expr;
+    expr.operation = UNARY_OPERATORS.at(tokens[token_index].type);
+    token_index++;
+    if (tokens[token_index].type == open_parentheses)
+    {
+        token_index++;
+        expr.operand = MakeExpression();
+        if (tokens[token_index].type != close_parentheses)
+        {
+            IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' here to close expression."});
+        }
+        token_index++;
+    } 
+    else 
+    {
+        expr.operand = MakeExpression();
+    }
+    return expr;
+}
 
 Expression ASTBuilder::MakeExpression()
 {
     Expression expr;
 
-    const set<TokenType> UNARY_OPERATORS
+    if (token_index >= tokens.size())
     {
-        operator_bitwise_not, 
-        operator_logical_not,
-        operator_address,
-        operator_pointer,
-        operator_subtraction
-    };
-
-    const set<TokenType> BINARY_OPERATORS
-    {
-        operator_addition,
-        operator_subtraction,
-        operator_multiplication,
-        operator_division,
-        operator_modulo,
-        operator_bitwise_and,
-        operator_bitwise_or,
-        operator_bitwise_xor,
-        operator_shift_left,
-        operator_shift_right,
-        operator_logical_and,
-        operator_logical_or,
-        operator_equality,
-        operator_inequality,
-        operator_lessthan,
-        operator_greaterthan,
-        operator_less_or_equal,
-        operator_greater_or_equal
-    };
-    if (UNARY_OPERATORS.contains(tokens[token_index].type)){
-        switch (tokens[token_index].type) 
-        {
-            case operator_bitwise_not:
-                expr.value = make_unique<std::variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression>>(UnaryExpression{});
-                get<UnaryExpression>(*expr.value).operation = bit_not;
-            break;
-            case operator_logical_not:
-                expr.value = make_unique<std::variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression>>(UnaryExpression{});
-                get<UnaryExpression>(*expr.value).operation = logic_not;
-            break;
-            case operator_address:
-                expr.value = make_unique<std::variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression>>(UnaryExpression{});
-                get<UnaryExpression>(*expr.value).operation = address;
-            break;
-            case operator_pointer:
-                expr.value = make_unique<std::variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression>>(UnaryExpression{});
-                get<UnaryExpression>(*expr.value).operation = dereference;
-            break;
-            case operator_subtraction:
-                expr.value = make_unique<std::variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression>>(UnaryExpression{});
-                get<UnaryExpression>(*expr.value).operation = AST::minus;
-            break;
-        }
-        token_index++;
-        if (tokens[token_index].type == open_parentheses)
-        {
-            token_index++;
-            get<UnaryExpression>(*expr.value).operand = MakeExpression();
-            if (tokens[token_index].type == close_parentheses)
-            {
-                IO::AddError({filename, tokens[token_index].file_position, "Expected parentheses to be closed. (Note that chaining multiple operations together without parentheses like 3*4+2-1 iis not supported due to technical difficulties.)"});
-            }
-        }
-        else if (tokens[token_index].type == literal_value)
-        {
-            LiteralExpression literal = tokens[token_index].contents;
-            get<UnaryExpression>(*expr.value).operand.value = make_unique<LiteralExpression>(literal);
-        }
-        
+       IO::AddError({filename, tokens.back().file_position, "Expected expression but got end of file"});
     }
 
-    
+    if (UNARY_OPERATORS.contains(tokens[token_index].type))
+    {
+        expr.value = make_unique<variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression, FunctionCallExpression>>(MakeUnaryExpression());
+        return expr;
+    }
+    size_t cursor = token_index;
+    int16_t parentheses_level = 0;
+    switch (tokens[token_index].type)
+    {
+        case open_parentheses:
+            do
+            {
+                if (tokens[cursor].type == open_parentheses)
+                {
+                    parentheses_level++;
+                }
+                else if (tokens[cursor].type == close_parentheses)
+                {
+                    parentheses_level--;
+                }
+                cursor++;
+            }
+            while (parentheses_level != 0 and cursor < tokens.size());
+        break;
+        case identifier:
+        case literal_value:
+            cursor++;
+        break;
+        default:
+            IO::AddError({filename, tokens[token_index].file_position, "Expected expression, but location does not contain a valid one."});
+        break;
+    };
+    if (BINARY_OPERATORS.contains(tokens[cursor].type)) 
+    {
+        expr.value = make_unique<variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression, FunctionCallExpression>>(MakeBinaryExpression());
+    } 
+    else if (tokens[cursor].type == open_parentheses)
+    {
+        expr.value = make_unique<variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression, FunctionCallExpression>>(MakeFunctionCallExpression());
+    }
+    else if (tokens[token_index].type == identifier)
+    {
+        expr.value = make_unique<variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression, FunctionCallExpression>>(SymbolNameExpression{});
+        get<SymbolNameExpression>(*expr.value).name = get<string>(tokens[token_index].contents);
+        token_index++;
+    } 
+    else if (tokens[token_index].type == literal_value)
+    {
+        expr.value = make_unique<variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression, FunctionCallExpression>>(LiteralExpression{tokens[token_index].contents});
+        token_index++;
+    }
     return expr;
 }
 
@@ -97,7 +199,7 @@ VariableDefinition ASTBuilder::MakeVariableDefinition()
     else 
     {
         cout << "ASTBuilder::MakeVariableDefinition says this will need updating to accoount for pointer/reference/array types." << endl;
-        definition.type.base.id = get<string>(tokens[token_index].contents);
+        definition.type.base.identifier = get<string>(tokens[token_index].contents);
     }
     token_index++;
     if (tokens[token_index].type != identifier)
@@ -123,9 +225,10 @@ VariableDefinition ASTBuilder::MakeVariableDefinition()
 
 TranslationUnit& ASTBuilder::BuildFile(const std::vector<Token>& token_source, std::string source_filename)
 {
+    token_index = 0;
     tokens = token_source;
     filename = source_filename;
-    while (token_index != tokens.size())
+    while (token_index < tokens.size())
     {
         switch (tokens[token_index].type) 
         {

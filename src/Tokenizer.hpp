@@ -86,7 +86,7 @@ class Token
 {
     using LiteralExpression = std::variant<std::nullopt_t, bool, uint64_t, double, char, std::string>;
     public:
-    std::variant<LiteralExpression> contents;
+    LiteralExpression contents;
     size_t length;
     size_t file_position;
     TokenType type;

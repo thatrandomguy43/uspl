@@ -47,7 +47,7 @@ void IO::AddError(CompileError error)
 set<string> GrabCLIArguments(int argc, const char** argv)
 {
     set<string> args_vec;
-    for (int argument_index = 1; argument_index < argc; argument_index++)
+    for (int16_t argument_index = 1; argument_index < argc; argument_index++)
     {
         args_vec.insert(argv[argument_index]);
     }
@@ -78,8 +78,6 @@ int main(int argc, const char** argv)
 {
     auto start_time = chrono::high_resolution_clock::now();
 
-    int x = 2 + 3 & 4;
-
     program_args = GrabCLIArguments(argc, argv);
 
     if (program_args.size() == 0){
@@ -87,13 +85,13 @@ int main(int argc, const char** argv)
         return 0xDEE5D1CC;
     }
 
-    set<SourceFile> file_contents;
+    vector<SourceFile> file_contents;
 
     for (auto arg : program_args)
     {
         if (arg[0] != '-')
         {
-            file_contents.insert( SourceFile{arg, GetFileContents(arg)});
+            file_contents.push_back( SourceFile{arg, GetFileContents(arg)});
         }
     }
     map<string, vector<Token>> token_streams;
@@ -102,6 +100,14 @@ int main(int argc, const char** argv)
     {
         token_streams[file.name] = file.TokenizeText();
     }
+
+    map<string, AST::TranslationUnit> file_trees;
+    ASTBuilder builder;
+    for (auto stream : token_streams)
+    {
+        file_trees.try_emplace(stream.first ,builder.BuildFile(stream.second, stream.first));
+    }
+    
 
     auto end_time = chrono::high_resolution_clock::now();
     auto time_elapsed = end_time - start_time;
