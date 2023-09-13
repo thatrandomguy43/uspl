@@ -163,10 +163,10 @@ class ASTBuilder
     AST::BinaryExpression MakeBinaryExpression();
     AST::UnaryExpression MakeUnaryExpression();
     AST::Expression MakeExpression();
+    std::variant<AST::SymbolNameExpression, AST::LiteralExpression> MakeSimpleExpression();
     AST::VariableDefinition MakeVariableDefinition();
     public:
-    AST::TranslationUnit root;
 
 
-    AST::TranslationUnit& BuildFile(const std::vector<Token>&, std::string);                                                                     
+    void BuildFile(AST::TranslationUnit&, const std::vector<Token>&, std::string);                                                                     
 };

@@ -4,6 +4,9 @@
 using namespace AST;
 using namespace std;
 
+using ExprValue = variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression, FunctionCallExpression>;
+
+
 const map<TokenType, UnaryOpType> UNARY_OPERATORS
 {
    {operator_bitwise_not, AST::bit_not},
@@ -76,13 +79,20 @@ BinaryExpression ASTBuilder::MakeBinaryExpression()
         expr.left_operand = MakeExpression();
         if (tokens[token_index].type != close_parentheses)
         {
-            IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' here to close expression."});
+            IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' to close expression."});
         }
         token_index++;
     } 
     else 
     {
-        expr.left_operand = MakeExpression();
+        auto simple_expr = MakeSimpleExpression();
+        if (simple_expr.index() == 0)
+        {
+            expr.left_operand.value = make_unique<ExprValue>(get<SymbolNameExpression>(simple_expr));
+        }
+        else {
+            expr.left_operand.value = make_unique<ExprValue>(get<LiteralExpression>(simple_expr));
+        }
     }
     expr.operation = BINARY_OPERATORS.at(tokens[token_index].type);
     token_index++;
@@ -92,13 +102,20 @@ BinaryExpression ASTBuilder::MakeBinaryExpression()
         expr.right_operand = MakeExpression();
         if (tokens[token_index].type != close_parentheses)
         {
-            IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' here to close expression."});
+            IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' to close expression."});
         }
         token_index++;
     } 
     else 
     {
-        expr.right_operand = MakeExpression();
+        auto simple_expr = MakeSimpleExpression();
+        if (simple_expr.index() == 0)
+        {
+            expr.right_operand.value = make_unique<ExprValue>(get<SymbolNameExpression>(simple_expr));
+        }
+        else {
+            expr.right_operand.value = make_unique<ExprValue>(get<LiteralExpression>(simple_expr));
+        }
     }
     return expr;
 }
@@ -113,14 +130,45 @@ UnaryExpression ASTBuilder::MakeUnaryExpression()
         expr.operand = MakeExpression();
         if (tokens[token_index].type != close_parentheses)
         {
-            IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' here to close expression."});
+            IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' to close expression."});
         }
         token_index++;
     } 
     else 
     {
-        expr.operand = MakeExpression();
+        auto simple_expr = MakeSimpleExpression();
+        if (simple_expr.index() == 0)
+        {
+            expr.operand.value = make_unique<ExprValue>(get<SymbolNameExpression>(simple_expr));
+        }
+        else {
+            expr.operand.value = make_unique<ExprValue>(get<LiteralExpression>(simple_expr));
+        }
     }
+    return expr;
+}
+
+variant<SymbolNameExpression, LiteralExpression> ASTBuilder::MakeSimpleExpression()
+{
+    variant<SymbolNameExpression, LiteralExpression> expr;
+
+    if (tokens[token_index].type == identifier)
+    {
+        expr = SymbolNameExpression{};
+        get<SymbolNameExpression>(expr).name = get<string>(tokens[token_index].contents);
+        token_index++;
+    } 
+    else if (tokens[token_index].type == literal_value)
+    {
+        expr = LiteralExpression{nullopt};
+        get<LiteralExpression>(expr) = tokens[token_index].contents;
+        token_index++;
+    }
+    else
+    {
+        IO::AddError({filename, tokens[token_index].file_position, "Expected simple expression (literal or variable name)."});
+    }
+
     return expr;
 }
 
@@ -135,7 +183,7 @@ Expression ASTBuilder::MakeExpression()
 
     if (UNARY_OPERATORS.contains(tokens[token_index].type))
     {
-        expr.value = make_unique<variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression, FunctionCallExpression>>(MakeUnaryExpression());
+        expr.value = make_unique<ExprValue>(MakeUnaryExpression());
         return expr;
     }
     size_t cursor = token_index;
@@ -167,22 +215,22 @@ Expression ASTBuilder::MakeExpression()
     };
     if (BINARY_OPERATORS.contains(tokens[cursor].type)) 
     {
-        expr.value = make_unique<variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression, FunctionCallExpression>>(MakeBinaryExpression());
+        expr.value = make_unique<ExprValue>(MakeBinaryExpression());
     } 
     else if (tokens[cursor].type == open_parentheses)
     {
-        expr.value = make_unique<variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression, FunctionCallExpression>>(MakeFunctionCallExpression());
+        expr.value = make_unique<ExprValue>(MakeFunctionCallExpression());
     }
-    else if (tokens[token_index].type == identifier)
+    else
     {
-        expr.value = make_unique<variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression, FunctionCallExpression>>(SymbolNameExpression{});
-        get<SymbolNameExpression>(*expr.value).name = get<string>(tokens[token_index].contents);
-        token_index++;
-    } 
-    else if (tokens[token_index].type == literal_value)
-    {
-        expr.value = make_unique<variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression, FunctionCallExpression>>(LiteralExpression{tokens[token_index].contents});
-        token_index++;
+        auto simple_expr = MakeSimpleExpression();
+        if (simple_expr.index() == 0)
+        {
+            expr.value = make_unique<ExprValue>(get<SymbolNameExpression>(MakeSimpleExpression()));
+        }
+        else {
+            expr.value = make_unique<ExprValue>(get<LiteralExpression>(MakeSimpleExpression()));
+        }
     }
     return expr;
 }
@@ -223,7 +271,7 @@ VariableDefinition ASTBuilder::MakeVariableDefinition()
     return definition;
 }
 
-TranslationUnit& ASTBuilder::BuildFile(const std::vector<Token>& token_source, std::string source_filename)
+void ASTBuilder::BuildFile(TranslationUnit& root, const std::vector<Token>& token_source, std::string source_filename)
 {
     token_index = 0;
     tokens = token_source;
@@ -240,8 +288,9 @@ TranslationUnit& ASTBuilder::BuildFile(const std::vector<Token>& token_source, s
             break;
             default:
             IO::AddError({filename, tokens[token_index].file_position, "Token not expected (or, as it is, not implemented yet) at file scope."});
+            token_index++;
             break;
         }
     }
-    return root;
+    return;
 }

@@ -14,7 +14,7 @@ using namespace IO;
 set<string> IO::program_args;
 map<string,vector<IO::CompileError>> error_list;
 
-void PrintErrors(const set<SourceFile>& files)
+void PrintErrors(const vector<SourceFile>& files)
 {
     for (auto file : files)
     {
@@ -94,6 +94,13 @@ int main(int argc, const char** argv)
             file_contents.push_back( SourceFile{arg, GetFileContents(arg)});
         }
     }
+
+    if (not error_list.empty())
+    {
+        PrintErrors(file_contents);
+        return 1;
+    }
+
     map<string, vector<Token>> token_streams;
 
     for (auto file : file_contents)
@@ -101,13 +108,25 @@ int main(int argc, const char** argv)
         token_streams[file.name] = file.TokenizeText();
     }
 
+    if (not error_list.empty())
+    {
+        PrintErrors(file_contents);
+        return 2;
+    }
+
     map<string, AST::TranslationUnit> file_trees;
     ASTBuilder builder;
     for (auto stream : token_streams)
     {
-        file_trees.try_emplace(stream.first ,builder.BuildFile(stream.second, stream.first));
+        file_trees.insert({stream.first, AST::TranslationUnit{}});
+        builder.BuildFile(file_trees.at(stream.first), stream.second, stream.first);
     }
-    
+
+    if (not error_list.empty())
+    {
+        PrintErrors(file_contents);
+        return 3;
+    }
 
     auto end_time = chrono::high_resolution_clock::now();
     auto time_elapsed = end_time - start_time;
