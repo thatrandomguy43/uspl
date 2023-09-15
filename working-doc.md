@@ -110,6 +110,6 @@ ifstat := `if` expr block {`else if` expr block} [`else` block]
 whilestat := `while` expr block
 assignment := reference `=` expr
 vardef := (`var` | `const`) TypeName{`$`}[`£`] Name `=` expr
-functiondef := TypeName `(`[TypeName Name {`,` TypeName Name}]`)` Name `=` block
+functiondef := TypeName `(`[TypeName Name {`,` TypeName Name}]`)` Name block
 file := {vardef | functiondef | externdecl}
 this crap is a lot already, a lot of stuff refering to shit thats not gonna be supported for a while

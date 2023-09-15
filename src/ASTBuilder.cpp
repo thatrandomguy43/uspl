@@ -5,7 +5,7 @@ using namespace AST;
 using namespace std;
 
 using ExprValue = variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression, FunctionCallExpression>;
-
+using StatValue = variant<BlockStatement, IfStatement, WhileLoop, AssignmentStatement, VariableDefinition, FunctionDefinition>;
 
 const map<TokenType, UnaryOpType> UNARY_OPERATORS
 {
@@ -37,7 +37,13 @@ const map<TokenType, BinaryOpType> BINARY_OPERATORS
     {operator_greater_or_equal, greaterthan_equals}
 };
 
-
+VariableType ASTBuilder::MakeVariableType()
+{
+    VariableType type;
+    type.base.identifier = get<string>(tokens[token_index].contents);
+    type.is_const = false;
+    return type;
+}
 
 FunctionCallExpression ASTBuilder::MakeFunctionCallExpression()
 {
@@ -51,7 +57,7 @@ FunctionCallExpression ASTBuilder::MakeFunctionCallExpression()
         IO::AddError({filename, tokens[token_index].file_position, "Expected identifier in function call expression"});
     }
     token_index++;
-    if (tokens[token_index].type == open_parentheses) 
+    if (tokens[token_index].type != open_parentheses) 
     {
         cout << "Uhh, what? Why are we here if this token wasn't an opening parentheses? ASTBuilder::MakeFunctionCallExpression" << endl;
     }
@@ -70,6 +76,7 @@ FunctionCallExpression ASTBuilder::MakeFunctionCallExpression()
     token_index++;
     return expr;
 }
+
 BinaryExpression ASTBuilder::MakeBinaryExpression()
 {
     BinaryExpression expr;
@@ -77,9 +84,10 @@ BinaryExpression ASTBuilder::MakeBinaryExpression()
     {
         token_index++;
         expr.left_operand = MakeExpression();
-        if (tokens[token_index].type != close_parentheses)
+        if (token_index >= tokens.size() or tokens[token_index].type != close_parentheses)
         {
             IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' to close expression."});
+            return expr;
         }
         token_index++;
     } 
@@ -100,9 +108,10 @@ BinaryExpression ASTBuilder::MakeBinaryExpression()
     {
         token_index++;
         expr.right_operand = MakeExpression();
-        if (tokens[token_index].type != close_parentheses)
+        if (token_index >= tokens.size() or tokens[token_index].type != close_parentheses)
         {
             IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' to close expression."});
+            return expr;
         }
         token_index++;
     } 
@@ -213,6 +222,11 @@ Expression ASTBuilder::MakeExpression()
             IO::AddError({filename, tokens[token_index].file_position, "Expected expression, but location does not contain a valid one."});
         break;
     };
+    if (cursor >= tokens.size())
+    {
+        IO::AddError({filename, tokens.back().file_position, "Expected expression, but reached end of file."});
+        return expr;
+    }
     if (BINARY_OPERATORS.contains(tokens[cursor].type)) 
     {
         expr.value = make_unique<ExprValue>(MakeBinaryExpression());
@@ -235,14 +249,82 @@ Expression ASTBuilder::MakeExpression()
     return expr;
 }
 
+BlockStatement ASTBuilder::MakeBlockStatement()
+{
+    BlockStatement block;
+    if (tokens[token_index].type == keyword_do)
+    {
+        token_index++;
+    }
+    else 
+    {
+        IO::AddError({filename, tokens[token_index].file_position, "Expected \'do\' to begin block statement."});
+    }
+
+    while (tokens[token_index].type == keyword_end)
+    {
+        if (token_index < tokens.size())
+        {
+            IO::AddError({filename, tokens.back().file_position, "Unexpected end of file during block."});
+            return block;
+        }
+        switch (tokens[token_index].type) 
+        {
+            case keyword_var:                                                                                             
+            case keyword_const:
+                block.statements.push_back(make_unique<StatValue>(MakeVariableDefinition()));
+            break;
+            case keyword_function:
+                block.statements.push_back(make_unique<StatValue>(MakeFunctionDefinition()));
+            break;
+            case identifier:
+            case keyword_if:
+                block.statements.push_back(make_unique<StatValue>(MakeIfStatement()));
+            case keyword_while:
+                block.statements.push_back(make_unique<StatValue>(MakeWhileLoop()));
+            default:
+            IO::AddError({filename, tokens[token_index].file_position, "Token is not the beginning of a valid statement."});
+            token_index++;
+            break;
+        }
+    }
+
+    return block;
+}
+
+WhileLoop ASTBuilder::MakeWhileLoop()
+{
+    WhileLoop loop;
+
+
+    return loop;
+}
+
+
+IfStatement ASTBuilder::MakeIfStatement()
+{
+    IfStatement statement;
+
+
+    return statement;
+}
+
+AssignmentStatement ASTBuilder::MakeAssignmentStatement()
+{
+    AssignmentStatement statement;
+
+    return statement;
+}
+
 VariableDefinition ASTBuilder::MakeVariableDefinition()
 {
     VariableDefinition definition;
     definition.type.is_const = true ? tokens[token_index].type == keyword_const : false;
     token_index++;
-    if (tokens[token_index].type != identifier)
+    if (token_index >= tokens.size() or tokens[token_index].type != identifier)
     {
         IO::AddError({filename, tokens[token_index].file_position, "Expected type name after var or const."});
+        return definition;
     } 
     else 
     {
@@ -250,24 +332,108 @@ VariableDefinition ASTBuilder::MakeVariableDefinition()
         definition.type.base.identifier = get<string>(tokens[token_index].contents);
     }
     token_index++;
-    if (tokens[token_index].type != identifier)
+    if (token_index >= tokens.size() or tokens[token_index].type != identifier)
     {
         IO::AddError({filename, tokens[token_index].file_position, "Expected name after variable type."});
+        return definition;
     }
     else 
     {
         definition.name = get<string>(tokens[token_index].contents);
     }
     token_index++;
-    if (tokens[token_index].type != operator_assignment)
+    if (token_index >= tokens.size() or tokens[token_index].type != operator_assignment)
     {
         IO::AddError({filename, tokens[token_index].file_position, "Expected assignment after variable name."});
         token_index++;
-        definition.value = Expression{};
         return definition;
     }
     token_index++;
+    if (token_index >= tokens.size())
+    {
+        IO::AddError({filename, tokens.back().file_position, "Unexpected end of file during variable definition."});
+        return definition;
+    }
     definition.value = MakeExpression();
+    return definition;
+}
+FunctionDefinition ASTBuilder::MakeFunctionDefinition()
+{
+    FunctionDefinition definition;
+    token_index++;
+
+    if (token_index < tokens.size() or tokens[token_index].type == identifier) {
+        definition.declation.type.return_type = MakeVariableType();
+    }
+    else 
+    {
+        IO::AddError({filename, tokens[token_index].file_position, "Expected function return type name."});
+    }
+    token_index++;
+    if (token_index < tokens.size())
+    {
+        IO::AddError({filename, tokens.back().file_position, "Unexpected end of file during function definition."});
+        return definition;
+    }
+    if (tokens[token_index].type != open_parentheses)
+    {
+        IO::AddError({filename, tokens[token_index].file_position, "Expected \'(\' to open function parameter list"});
+    }
+    while (tokens[token_index].type == identifier or tokens[token_index].type == seperator)
+    {
+        token_index++;
+        if (token_index < tokens.size())
+        {
+            IO::AddError({filename, tokens.back().file_position, "Unexpected end of file during function definition."});
+            return definition;
+        }
+        definition.declation.type.parameter_types.push_back({});
+        if (tokens[token_index].type == identifier) 
+        {
+            definition.declation.type.parameter_types.back() = MakeVariableType();
+        }
+        else 
+        {
+            IO::AddError({filename, tokens[token_index].file_position, "Expected function parameter type name."});
+        }
+        token_index++;
+        if (token_index < tokens.size())
+        {
+            IO::AddError({filename, tokens.back().file_position, "Unexpected end of file during function definition."});
+            return definition;
+        }
+        if (tokens[token_index].type == identifier) 
+        {
+            definition.param_names.push_back(get<string>(tokens[token_index].contents));
+        }
+        else 
+        {
+            IO::AddError({filename, tokens[token_index].file_position, "Expected function parameter name."});
+        }
+        token_index++;
+        if (token_index < tokens.size())
+        {
+            IO::AddError({filename, tokens.back().file_position, "Unexpected end of file during function definition."});
+            return definition;
+        }
+        if (tokens[token_index].type != seperator and tokens[token_index].type != close_parentheses) 
+        {
+            IO::AddError({filename, tokens[token_index].file_position, "Expected \',\' between function parameters."});
+        }
+    }
+    token_index++;
+    if (tokens[token_index].type == identifier) 
+    {
+        definition.declation.name = get<string>(tokens[token_index].contents);
+    }
+    else 
+    {
+        IO::AddError({filename, tokens[token_index].file_position, "Expected function name."});
+    }
+
+    token_index++;
+    definition.body = MakeBlockStatement();
+
     return definition;
 }
 
@@ -282,12 +448,13 @@ void ASTBuilder::BuildFile(TranslationUnit& root, const std::vector<Token>& toke
         {
             case keyword_var:                                                                                             
             case keyword_const:
-                root.statements.push_back(make_unique<variant<BlockStatement, AssignmentStatement, VariableDefinition, FunctionDefinition>>(MakeVariableDefinition()));
+                root.statements.push_back(make_unique<StatValue>(MakeVariableDefinition()));
             break;
             case keyword_function:
+                root.statements.push_back(make_unique<StatValue>(MakeFunctionDefinition()));
             break;
             default:
-            IO::AddError({filename, tokens[token_index].file_position, "Token not expected (or, as it is, not implemented yet) at file scope."});
+            IO::AddError({filename, tokens[token_index].file_position, "Token not expected at file scope."});
             token_index++;
             break;
         }

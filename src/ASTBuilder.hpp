@@ -47,6 +47,8 @@ class SymbolNameExpression;
 class UnaryExpression;
 class BinaryExpression;
 class FunctionCallExpression;
+class IfStatement;
+class WhileLoop;
 //the nullopt is just so i dont get a compile error when assingnning the contents of a literal value token to it
 //the compiler dosent know that nullopt does not happen if the token type is a literal
 using LiteralExpression = std::variant<std::nullopt_t, bool, uint64_t, double, char, std::string>;
@@ -95,7 +97,8 @@ class FunctionCallExpression
     std::string identifier;
     std::vector<Expression> args;
 };
-using Statement = std::unique_ptr<std::variant<BlockStatement, AssignmentStatement, VariableDefinition, FunctionDefinition>>;
+
+using Statement = std::unique_ptr<std::variant<BlockStatement, IfStatement, WhileLoop, AssignmentStatement, VariableDefinition, FunctionDefinition>>;
 class AssignmentStatement
 {
     public:
@@ -159,12 +162,18 @@ class ASTBuilder
     std::vector<Token> tokens;
     size_t token_index;
 
+    AST::VariableType MakeVariableType();
     AST::FunctionCallExpression MakeFunctionCallExpression();
     AST::BinaryExpression MakeBinaryExpression();
     AST::UnaryExpression MakeUnaryExpression();
-    AST::Expression MakeExpression();
     std::variant<AST::SymbolNameExpression, AST::LiteralExpression> MakeSimpleExpression();
+    AST::Expression MakeExpression();
+    AST::BlockStatement MakeBlockStatement();
+    AST::IfStatement MakeIfStatement();
+    AST::WhileLoop MakeWhileLoop();
+    AST::AssignmentStatement MakeAssignmentStatement();
     AST::VariableDefinition MakeVariableDefinition();
+    AST::FunctionDefinition MakeFunctionDefinition();
     public:
 
 
