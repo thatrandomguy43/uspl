@@ -5,7 +5,6 @@
 #include <fstream>
 #include <sstream>
 #include <chrono>
-#include <format>
 using namespace std;
 using namespace IO;
 
@@ -31,7 +30,7 @@ void PrintErrors(const vector<SourceFile>& files)
                     char_num = 0;
                 }
             }
-            cout << format("Error at ({}, {}) in {}: {}", line_num, char_num, error.filename, error.error_msg) << endl;
+            cout << "Error at (" << to_string(line_num) << ", " << to_string(char_num) << ") in " << file.name << ": " << error.error_msg << endl;
         }
     }
     return;
