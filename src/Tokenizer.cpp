@@ -4,7 +4,6 @@
 #include <exception>
 #include <map>
 #include <iostream>
-#include <vcruntime.h>
 
 using namespace std;
 //oh the horror! TWO using namespaces!
