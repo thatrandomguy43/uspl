@@ -104,6 +104,7 @@ int main(int argc, const char** argv)
     for (auto file : file_contents)
     {
         token_streams[file.name] = file.TokenizeText();
+        cout << "File " << file.name << " tokenized.\n";
     }
 
     if (not error_list.empty())
@@ -118,6 +119,7 @@ int main(int argc, const char** argv)
     {
         file_trees.insert({stream.first, AST::TranslationUnit{}});
         builder.BuildFile(file_trees.at(stream.first), stream.second, stream.first);
+        cout << "Built AST of " << stream.first << "\n";
     }
 
     if (not error_list.empty())

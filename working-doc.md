@@ -91,7 +91,25 @@ exceptions are cringe (and a super pain in the ass from a compiler perspective i
 
 
 
+i think i finally decided what i wnat for arrays
+they are basically a type of pointer, and there isn't any "value type" for arrays
+they store pointer and size
+maybe declaration looks like this?
+var [var int32] x
+const [var int32] x
+var [const int32] x
+const [const int32] x
+size can be accessed like this
+#x
+if you want to make one on the stack you use some version of alloca()
+probably syntactically similar to c++ new
 
+ynow what if im doing this i dont think i even want references
+if im gonna have 4 types of const once might as well do it again
+wait i realize
+i dont have to even have multi layer ptrs if im doing this anyway right?
+i guess they do have some uses
+should keep them probavly, also because c compatibility
 
 for self
 
