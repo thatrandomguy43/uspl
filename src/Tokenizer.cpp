@@ -56,6 +56,7 @@ const map<string, TokenType> KEYWORD_TOKEN_IDS
     {"namespace", keyword_namespace},
     {"do", keyword_do},
     {"end", keyword_end},
+    {"return", keyword_return},
     {"if", keyword_if},
     {"else", keyword_else},
     {"while", keyword_while},

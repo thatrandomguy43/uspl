@@ -1,1 +1,14 @@
-var int32 balls = 5+
+function int32() main 
+do
+    var int32 sus = 4
+    sus = 3 + sus
+    if sus == 7
+    do
+        printf("ur cringe")
+    end
+    while sus ~= 0
+    do
+        printf("lol")
+    end
+    return sus
+end

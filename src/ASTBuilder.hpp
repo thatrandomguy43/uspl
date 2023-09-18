@@ -39,7 +39,7 @@ enum UnaryOpType
 };
 
 
-class BlockStatement;
+
 class AssignmentStatement;
 class VariableDefinition;
 class FunctionDefinition;
@@ -47,6 +47,8 @@ class SymbolNameExpression;
 class UnaryExpression;
 class BinaryExpression;
 class FunctionCallExpression;
+class BlockStatement;
+class ReturnStatement;
 class IfStatement;
 class WhileLoop;
 //the nullopt is just so i dont get a compile error when assingnning the contents of a literal value token to it
@@ -98,7 +100,7 @@ class FunctionCallExpression
     std::vector<Expression> args;
 };
 
-using Statement = std::unique_ptr<std::variant<BlockStatement, IfStatement, WhileLoop, AssignmentStatement, VariableDefinition, FunctionDefinition>>;
+using Statement = std::unique_ptr<std::variant<BlockStatement, ReturnStatement, IfStatement, WhileLoop, AssignmentStatement, FunctionCallExpression, VariableDefinition, FunctionDefinition>>;
 class AssignmentStatement
 {
     public:
@@ -109,6 +111,11 @@ class BlockStatement
 {
     public:
     std::vector<Statement> statements;
+};
+class ReturnStatement
+{
+    public:
+    Expression value;
 };
 class IfStatement
 {
@@ -169,6 +176,7 @@ class ASTBuilder
     std::variant<AST::SymbolNameExpression, AST::LiteralExpression> MakeSimpleExpression();
     AST::Expression MakeExpression();
     AST::BlockStatement MakeBlockStatement();
+    AST::ReturnStatement MakeReturnStatement();
     AST::IfStatement MakeIfStatement();
     AST::WhileLoop MakeWhileLoop();
     AST::AssignmentStatement MakeAssignmentStatement();

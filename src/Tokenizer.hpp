@@ -25,6 +25,7 @@ enum TokenType
     keyword_for,
     keyword_in,
     keyword_break,
+    keyword_return,
 
     operator_addition,
     operator_subtraction,
