@@ -1,5 +1,8 @@
 #include "ASTBuilder.hpp"
 
-
-
-void PerformTypeAnalysis(AST::TranslationUnit root);
+class TypeAnalyzer
+{
+    
+    public:
+    void TypeAnalyzeBlock(AST::TranslationUnit root);
+}

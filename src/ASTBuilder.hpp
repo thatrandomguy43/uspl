@@ -63,7 +63,9 @@ class VariableType
 {
     public:
     UnqualifiedType base;
-    bool is_const;
+    bool is_const = false;
+    bool is_pointer = false;
+    int8_t array_dimensions = 0;
 };
 class Expression
 {
@@ -158,7 +160,7 @@ class FunctionDefinition
 class TranslationUnit
 {
     public:
-    std::vector<Statement> statements;
+    BlockStatement global_scope;
 };
 
 }

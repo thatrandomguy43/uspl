@@ -94,22 +94,18 @@ exceptions are cringe (and a super pain in the ass from a compiler perspective i
 i think i finally decided what i wnat for arrays
 they are basically a type of pointer, and there isn't any "value type" for arrays
 they store pointer and size
-maybe declaration looks like this?
-var [var int32] x
-const [var int32] x
-var [const int32] x
-const [const int32] x
-size can be accessed like this
-#x
-if you want to make one on the stack you use some version of alloca()
-probably syntactically similar to c++ new
+i decided having const refs to non const arrays/ non const refs to const arrays is not really needed
+it would be very rarely wanted
 
-ynow what if im doing this i dont think i even want references
-if im gonna have 4 types of const once might as well do it again
-wait i realize
-i dont have to even have multi layer ptrs if im doing this anyway right?
-i guess they do have some uses
-should keep them probavly, also because c compatibility
+i dont think i can have references on top of this
+they're just syntax sugar anyway, and i'm not gonna do pointer arithmetic, so that mistake is not a thing you can  make
+
+aaahuhufa i have gone through so many rethinkings of pointer/reference array shit
+ok, no bilt in double ptrs, but i need multi d arrays because string arrays
+double ptrs that arent arrays in c are really rare, and if you must have it you can do arrays with 1 element, thats a hack buts its whatever
+its no less of a hack that c ptr/array equivilance, and more memory safe too
+besides the probper way to do it is a class which will happen at some point
+
 
 for self
 
@@ -127,7 +123,8 @@ blockstat := ifstat | whilestat | forstat | block
 ifstat := `if` expr block {`else if` expr block} [`else` block]
 whilestat := `while` expr block
 assignment := reference `=` expr
-vardef := (`var` | `const`) TypeName{`$`}[`£`] Name `=` expr
-functiondef := TypeName `(`[TypeName Name {`,` TypeName Name}]`)` Name block
+type := TypeName[ `$` ]{ `[]` }
+vardef := (`var` | `const`) type Name `=` expr
+functiondef := type `(`[type Name {`,` type Name}]`)` Name block
 file := {vardef | functiondef | externdecl}
 this crap is a lot already, a lot of stuff refering to shit thats not gonna be supported for a while

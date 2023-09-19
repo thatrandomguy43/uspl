@@ -40,8 +40,35 @@ const map<TokenType, BinaryOpType> BINARY_OPERATORS
 VariableType ASTBuilder::MakeVariableType()
 {
     VariableType type;
-    type.base.identifier = get<string>(tokens[token_index].contents);
-    type.is_const = false;
+    type.is_const = true ? tokens[token_index].type == keyword_const : false;
+    token_index++;
+    if (token_index >= tokens.size() or tokens[token_index].type != identifier)
+    {
+        IO::AddError({filename, tokens[token_index].file_position, "Expected type name after var or const."});
+        return type;
+    } 
+    else 
+    {
+        type.base.identifier = get<string>(tokens[token_index].contents);
+    }
+    if (tokens[token_index].type == operator_pointer)
+    {
+        type.is_pointer = true;
+        token_index++;
+    }
+    while (tokens[token_index].type == open_bracket) 
+    {
+        token_index++;
+        if (tokens[token_index].type == close_bracket)
+        {
+            type.array_dimensions++;
+            token_index++;
+        }
+        else 
+        {
+            IO::AddError({filename, tokens[token_index].file_position, "Array type modifier consists of empty pair of square brackes, like this: '[]'."});
+        }
+    }
     return type;
 }
 
@@ -363,17 +390,7 @@ AssignmentStatement ASTBuilder::MakeAssignmentStatement()
 VariableDefinition ASTBuilder::MakeVariableDefinition()
 {
     VariableDefinition definition;
-    definition.type.is_const = true ? tokens[token_index].type == keyword_const : false;
-    token_index++;
-    if (token_index >= tokens.size() or tokens[token_index].type != identifier)
-    {
-        IO::AddError({filename, tokens[token_index].file_position, "Expected type name after var or const."});
-        return definition;
-    } 
-    else 
-    {
-        definition.type = MakeVariableType();
-    }
+
     token_index++;
     if (token_index >= tokens.size() or tokens[token_index].type != identifier)
     {
@@ -492,10 +509,10 @@ void ASTBuilder::BuildFile(TranslationUnit& root, const std::vector<Token>& toke
         {
             case keyword_var:                                                                                             
             case keyword_const:
-                root.statements.push_back(make_unique<StatValue>(MakeVariableDefinition()));
+                root.global_scope.statements.push_back(make_unique<StatValue>(MakeVariableDefinition()));
             break;
             case keyword_function:
-                root.statements.push_back(make_unique<StatValue>(MakeFunctionDefinition()));
+                root.global_scope.statements.push_back(make_unique<StatValue>(MakeFunctionDefinition()));
             break;
             default:
             IO::AddError({filename, tokens[token_index].file_position, "Token not expected at file scope."});

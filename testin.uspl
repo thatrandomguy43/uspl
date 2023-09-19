@@ -4,11 +4,11 @@ do
     sus = 3 + sus
     if sus == 7
     do
-        printf("ur cringe")
+        var float64 amog = 4.2
     end
     while sus ~= 0
     do
-        printf("lol")
+        sus = sus - 1
     end
     return sus
 end

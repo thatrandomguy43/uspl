@@ -251,11 +251,11 @@ Token SourceFile::ProcessNumberLiteral()
         position += 2;
         try 
         {
-            value = stoull(text.substr(position, string::npos), &length, 16);
+            value = stoll(text.substr(position, string::npos), &length, 16);
         }
         catch (exception e)
         {
-            IO::AddError({name, position, "Integer literal too THICC (value higher than 2^64)"});
+            IO::AddError({name, position, "Integer literal too THICC (value higher than 2^63 or lower than -2^63)"});
         }
         
 
@@ -267,7 +267,7 @@ Token SourceFile::ProcessNumberLiteral()
         optional<uint64_t> int_value = nullopt;
         try 
         {
-            int_value = stoull(text.substr(position, string::npos));
+            int_value = stoll(text.substr(position, string::npos));
         }
         catch (exception e){}
         if (int_value.has_value() and int_value == float_value) 
