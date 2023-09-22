@@ -64,8 +64,7 @@ class VariableType
     public:
     UnqualifiedType base;
     bool is_const = false;
-    bool is_pointer = false;
-    int8_t array_dimensions = 0;
+    int8_t level_of_indirection = 0;
 };
 class Expression
 {

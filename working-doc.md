@@ -100,12 +100,11 @@ it would be very rarely wanted
 i dont think i can have references on top of this
 they're just syntax sugar anyway, and i'm not gonna do pointer arithmetic, so that mistake is not a thing you can  make
 
-aaahuhufa i have gone through so many rethinkings of pointer/reference array shit
-ok, no bilt in double ptrs, but i need multi d arrays because string arrays
-double ptrs that arent arrays in c are really rare, and if you must have it you can do arrays with 1 element, thats a hack buts its whatever
-its no less of a hack that c ptr/array equivilance, and more memory safe too
-besides the probper way to do it is a class which will happen at some point
-
+wait i could merge ptr and array
+this seems like a reasonable thing?
+i just have regular ptrs be 1 length arrays, and have syntax shorthand of $p = p[ 0 ]
+i'm still gonna leave references out until later, they are not really neccesary and complicate things for me
+multi layer ptrs and arrays can exist at once like this!
 
 for self
 
@@ -123,8 +122,10 @@ blockstat := ifstat | whilestat | forstat | block
 ifstat := `if` expr block {`else if` expr block} [`else` block]
 whilestat := `while` expr block
 assignment := reference `=` expr
-type := TypeName[ `$` ]{ `[]` }
+type := TypeName{ `$` }
 vardef := (`var` | `const`) type Name `=` expr
 functiondef := type `(`[type Name {`,` type Name}]`)` Name block
 file := {vardef | functiondef | externdecl}
 this crap is a lot already, a lot of stuff refering to shit thats not gonna be supported for a while
+
+i

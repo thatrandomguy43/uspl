@@ -51,24 +51,12 @@ VariableType ASTBuilder::MakeVariableType()
     {
         type.base.identifier = get<string>(tokens[token_index].contents);
     }
-    if (tokens[token_index].type == operator_pointer)
+    while (tokens[token_index].type == operator_pointer)
     {
-        type.is_pointer = true;
+        type.level_of_indirection++;
         token_index++;
     }
-    while (tokens[token_index].type == open_bracket) 
-    {
-        token_index++;
-        if (tokens[token_index].type == close_bracket)
-        {
-            type.array_dimensions++;
-            token_index++;
-        }
-        else 
-        {
-            IO::AddError({filename, tokens[token_index].file_position, "Array type modifier consists of empty pair of square brackes, like this: '[]'."});
-        }
-    }
+        
     return type;
 }
 
