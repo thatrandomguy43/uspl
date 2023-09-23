@@ -53,7 +53,7 @@ class IfStatement;
 class WhileLoop;
 //the nullopt is just so i dont get a compile error when assingnning the contents of a literal value token to it
 //the compiler dosent know that nullopt does not happen if the token type is a literal
-using LiteralExpression = std::variant<std::nullopt_t, bool, uint64_t, double, char, std::string>;
+
 class UnqualifiedType 
 {
     public:
@@ -65,6 +65,12 @@ class VariableType
     UnqualifiedType base;
     bool is_const = false;
     int8_t level_of_indirection = 0;
+};
+class LiteralExpression
+{
+    public:
+    std::variant<std::nullopt_t, bool, uint64_t, double, char, std::string> value;
+    VariableType type;
 };
 class Expression
 {
@@ -99,6 +105,7 @@ class FunctionCallExpression
     public:
     std::string identifier;
     std::vector<Expression> args;
+    VariableType type;
 };
 
 using Statement = std::unique_ptr<std::variant<BlockStatement, ReturnStatement, IfStatement, WhileLoop, AssignmentStatement, FunctionCallExpression, VariableDefinition, FunctionDefinition>>;
@@ -130,18 +137,23 @@ class WhileLoop
     BlockStatement content;
     Expression condition;
 };
-class VariableDefinition
+class VariableDeclaration
 {
     public:
     std::string name;
     VariableType type;
+};
+class VariableDefinition
+{
+    public:
+    VariableDeclaration declaration;
     Expression value;
 };
 class FunctionType
 {
     public:
     VariableType return_type;
-    std::vector<VariableType> parameter_types;
+    std::vector<VariableDeclaration> parameters;
 };
 class FunctionDeclaration
 {
@@ -153,7 +165,6 @@ class FunctionDefinition
 {
     public:
     FunctionDeclaration declation;
-    std::vector<std::string> param_names;
     BlockStatement body;
 };
 class TranslationUnit

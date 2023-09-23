@@ -1,12 +1,22 @@
 #include "ASTBuilder.hpp"
+#include "unordered_map"
 
 class TypeAnalyzer
 {
-    int16_t current_scope_depth;
+    uint8_t current_scope_depth = 0;
+    std::vector<std::unordered_map<std::string, std::variant<AST::VariableType, AST::FunctionType>>> symbols;
+    bool IsTypeConvertable(const AST::VariableType& to, const AST::VariableType& from);
+    std::variant<std::nullopt_t, AST::VariableType, AST::FunctionType> FindTypeOfSymbol(const std::string&);
+    void AnalyzeSymbolNameExpression(AST::SymbolNameExpression&);
+    void AnalyzeLiteralExpression(AST::LiteralExpression&);
+    void AnalyzeUnaryExpression(AST::UnaryExpression&);
+    void AnalyzeBinaryExpression(AST::BinaryExpression&);
+    void AnalyzeFunctionCall(AST::FunctionCallExpression&);
+    void AnalyzeExpression(AST::Expression&);
+    void CheckAssignment(AST::AssignmentStatement&);
+    void CheckVariableDefinition(AST::VariableDefinition&);
+    void AnalyzeStatement(AST::Statement&);
+    void AnalyzeFunctionDefinition(AST::FunctionDefinition&);
     public:
-    std::variant<AST::VariableType, AST::FunctionType> FindTypeOfSymbol(const std::string&);
-    void TypeAnalyzeFunctionCall(AST::FunctionCallExpression&);
-    void TypeAnalyzeExpression(AST::Expression&);
-    void TypeAnalyzeBlock(AST::BlockStatement&);
-    void TypeAnalyzeFunctionDefinition(AST::FunctionDefinition&);
+    void AnalyzeBlock(AST::BlockStatement&);
 };

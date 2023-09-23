@@ -186,7 +186,7 @@ variant<SymbolNameExpression, LiteralExpression> ASTBuilder::MakeSimpleExpressio
     else if (tokens[token_index].type == literal_value)
     {
         expr = LiteralExpression{nullopt};
-        get<LiteralExpression>(expr) = tokens[token_index].contents;
+        get<LiteralExpression>(expr).value = tokens[token_index].contents;
         token_index++;
     }
     else
@@ -387,7 +387,7 @@ VariableDefinition ASTBuilder::MakeVariableDefinition()
     }
     else 
     {
-        definition.name = get<string>(tokens[token_index].contents);
+        definition.declaration.name = get<string>(tokens[token_index].contents);
     }
     token_index++;
     if (token_index >= tokens.size() or tokens[token_index].type != operator_assignment)
@@ -436,10 +436,10 @@ FunctionDefinition ASTBuilder::MakeFunctionDefinition()
             IO::AddError({filename, tokens.back().file_position, "Unexpected end of file inside function definition."});
             return definition;
         }
-        definition.declation.type.parameter_types.push_back({});
+        definition.declation.type.parameters.push_back({});
         if (tokens[token_index].type == identifier) 
         {
-            definition.declation.type.parameter_types.back() = MakeVariableType();
+            definition.declation.type.parameters.back().type = MakeVariableType();
         }
         else 
         {
@@ -453,7 +453,7 @@ FunctionDefinition ASTBuilder::MakeFunctionDefinition()
         }
         if (tokens[token_index].type == identifier) 
         {
-            definition.param_names.push_back(get<string>(tokens[token_index].contents));
+            definition.declation.type.parameters.back().name = get<string>(tokens[token_index].contents);
         }
         else 
         {
