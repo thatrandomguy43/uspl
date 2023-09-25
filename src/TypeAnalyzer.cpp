@@ -2,6 +2,37 @@
 #include "IO.hpp"
 using namespace std;
 
+bool TypeAnalyzer::IsTypeConvertable(const AST::VariableType& to, const AST::VariableType& from)
+{
+    const set<AST::UnqualifiedType> INTEGER_TYPES = {
+        {"int8"},
+        {"int16"},
+        {"int32"},
+        {"int64"},
+    };
+
+    const set<AST::UnqualifiedType> FLOAT_TYPES = {
+        {"float32"},
+        {"float64"},
+    };
+
+    if (to.level_of_indirection == 0 and from.level_of_indirection == 0)
+    {
+        if (INTEGER_TYPES.contains(from.base))
+        {
+            if (INTEGER_TYPES.contains(to.base)) 
+            {
+                return true;
+            }
+            else if (FLOAT_TYPES.contains(to.base))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void TypeAnalyzer::AnalyzeSymbolNameExpression(AST::SymbolNameExpression& expr)
 {
     variant<nullopt_t, AST::VariableType, AST::FunctionType> type = FindTypeOfSymbol(expr.name);
@@ -48,23 +79,18 @@ void TypeAnalyzer::AnalyzeExpression(AST::Expression& expr)
     switch (expr.value->index()) {
             case 0:
                 AnalyzeSymbolNameExpression(get<AST::SymbolNameExpression>(*expr.value));
-                expr.type = get<AST::SymbolNameExpression>(*expr.value).type;
             break;
             case 1:
                 AnalyzeLiteralExpression(get<AST::LiteralExpression>(*expr.value));
-                expr.type = get<AST::LiteralExpression>(*expr.value).type;
             break;
             case 2:
                 AnalyzeUnaryExpression(get<AST::UnaryExpression>(*expr.value));
-                expr.type = get<AST::LiteralExpression>(*expr.value).type;
             break;
             case 3:
                 AnalyzeBinaryExpression(get<AST::BinaryExpression>(*expr.value));
-                expr.type = get<AST::BinaryExpression>(*expr.value).type;
             break;
             case 4:
                 AnalyzeFunctionCall(get<AST::FunctionCallExpression>(*expr.value));
-                expr.type = get<AST::FunctionCallExpression>(*expr.value).type;
             break;
         }
 }
@@ -73,9 +99,9 @@ void TypeAnalyzer::CheckAssignment(AST::AssignmentStatement& assignment)
 {
     AnalyzeExpression(assignment.value);
     variant<nullopt_t, AST::VariableType, AST::FunctionType> target_type = FindTypeOfSymbol(assignment.target_name);
-    if (target_type.index() == 1 and IsTypeConvertable(get<AST::VariableType>(target_type), assignment.value.type))
+    if (target_type.index() == 1 and IsTypeConvertable(get<AST::VariableType>(target_type), assignment.value.GetType()))
     {
-    
+        
     }
     else 
     {
@@ -85,7 +111,7 @@ void TypeAnalyzer::CheckAssignment(AST::AssignmentStatement& assignment)
 void TypeAnalyzer::CheckVariableDefinition(AST::VariableDefinition& definition)
 {
     AnalyzeExpression(definition.value);
-    if (IsTypeConvertable(definition.declaration.type, definition.value.type))
+    if (IsTypeConvertable(definition.declaration.type, definition.value.GetType()))
     {
     
     }

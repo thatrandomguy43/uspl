@@ -76,7 +76,7 @@ class Expression
 {
     public:
     std::unique_ptr<std::variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression, FunctionCallExpression>> value;
-    VariableType type;
+    VariableType GetType();
 };
 class SymbolNameExpression
 {

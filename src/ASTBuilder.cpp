@@ -37,6 +37,29 @@ const map<TokenType, BinaryOpType> BINARY_OPERATORS
     {operator_greater_or_equal, greaterthan_equals}
 };
 
+VariableType Expression::GetType()
+{
+    switch (value->index()) 
+    {
+        case 0:
+            return get<AST::SymbolNameExpression>(*value).type;
+        break;
+        case 1:
+            return get<AST::LiteralExpression>(*value).type;
+        break;
+        case 2:
+            return get<AST::LiteralExpression>(*value).type;
+        break;
+        case 3:
+            return get<AST::BinaryExpression>(*value).type;
+        break;
+        case 4:
+            return get<AST::FunctionCallExpression>(*value).type;
+        break;
+    }
+    return {};
+}
+
 VariableType ASTBuilder::MakeVariableType()
 {
     VariableType type;
