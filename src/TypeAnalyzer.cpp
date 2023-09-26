@@ -30,6 +30,7 @@ bool TypeAnalyzer::IsTypeConvertable(const AST::VariableType& to, const AST::Var
             }
         }
     }
+    //i dont really want default conversions to bool, people can be tripped up by truthy/falsy easily
     return false;
 }
 
@@ -55,7 +56,7 @@ void TypeAnalyzer::AnalyzeLiteralExpression(AST::LiteralExpression& literal)
     switch (literal.value.index()) 
     {
         case 1:
-            literal.type.base.identifier = "bool";
+            literal.type.base = {"bool"};
         break;
         case 2:
             literal.type.base = {"int64"};
@@ -70,6 +71,34 @@ void TypeAnalyzer::AnalyzeLiteralExpression(AST::LiteralExpression& literal)
             literal.type.base = {"char"};
             literal.type.level_of_indirection = 1;
             literal.type.is_const = true;
+        break;
+    }
+}
+
+void TypeAnalyzer::AnalyzeUnaryExpression(AST::UnaryExpression& expr)
+{
+    switch (expr.operation) {
+        case AST::negation:
+            if (IsTypeConvertable({"int64"}, expr.operand.GetType())) 
+            {
+                expr.type = {"int64"};
+            }
+            else if (IsTypeConvertable({"float64"}, expr.operand.GetType()))
+            {
+                expr.type = {"float64"};
+            }
+            else 
+            {
+                IO::AddError({"Placeholder file", 0, "Cannot perform negation on non-numerical type " + expr.operand.GetType().base.identifier + "."} );
+            }
+        break;
+        case AST::bit_not:
+        break;
+        case AST::logic_not:
+        break;
+        case AST::address:
+        break;
+        case AST::dereference:
         break;
     }
 }
