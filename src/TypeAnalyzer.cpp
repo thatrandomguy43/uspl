@@ -77,6 +77,7 @@ void TypeAnalyzer::AnalyzeLiteralExpression(AST::LiteralExpression& literal)
 
 void TypeAnalyzer::AnalyzeUnaryExpression(AST::UnaryExpression& expr)
 {
+    AnalyzeExpression(expr.operand);
     switch (expr.operation) {
         case AST::negation:
             if (IsTypeConvertable({"int64"}, expr.operand.GetType())) 
@@ -93,12 +94,76 @@ void TypeAnalyzer::AnalyzeUnaryExpression(AST::UnaryExpression& expr)
             }
         break;
         case AST::bit_not:
+            if (IsTypeConvertable({"int64"}, expr.operand.GetType())) 
+            {
+                expr.type = {"int64"};
+            }
+            else 
+            {
+                IO::AddError({"Placeholder file", 0, "Cannot perform bitwise NOT on non-integer type " + expr.operand.GetType().base.identifier + "."} );
+            }
         break;
         case AST::logic_not:
+            if (IsTypeConvertable({"bool"}, expr.operand.GetType())) 
+            {
+                expr.type = {"bool"};
+            }
+            else 
+            {
+                IO::AddError({"Placeholder file", 0, "Cannot perform logical NOT on non-boolean type " + expr.operand.GetType().base.identifier + "."} );
+            }      
         break;
         case AST::address:
+            if (expr.operand.value->index() == 0)
+            {
+                expr.type = expr.operand.GetType();
+                expr.type.level_of_indirection++;
+            }
+            else 
+            {
+                IO::AddError({"Placeholder file", 0, "Can only get address of variables (lvalues), and not other types of expression (rvalues)."} );
+            }
         break;
         case AST::dereference:
+            if (expr.operand.value->index() > 0)
+            {
+                expr.type = expr.operand.GetType();
+                expr.type.level_of_indirection--;
+            }
+            else 
+            {
+                IO::AddError({"Placeholder file", 0, "Cannot dereference non-pointer type " + expr.operand.GetType().base.identifier + "."} );
+            }
+        break;
+    }
+}
+
+void TypeAnalyzer::AnalyzeBinaryExpression(AST::BinaryExpression& expr)
+{
+    AnalyzeExpression(expr.left_operand);
+    AnalyzeExpression(expr.right_operand);
+    switch (expr.operation) {
+        case AST::addition:
+        case AST::subtraction:
+        case AST::multiplication:
+        case AST::division:
+        case AST::modulo:
+        break;
+        case AST::bit_and:
+        case AST::bit_or:
+        case AST::bit_xor:
+        case AST::bitshift_left:
+        case AST::bitshift_right:
+        break;
+        case AST::logic_and:
+        case AST::logic_or:
+        break;
+        case AST::equals:
+        case AST::notequals:
+        case AST::lessthan:
+        case AST::greaterthan:
+        case AST::lessthan_equals:
+        case AST::greaterthan_equals:
         break;
     }
 }

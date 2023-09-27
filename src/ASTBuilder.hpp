@@ -59,6 +59,7 @@ class UnqualifiedType
     public:
     std::string identifier;
 };
+//shit i noticed i dont have a way to print qualified type names
 class VariableType
 {
     public:
