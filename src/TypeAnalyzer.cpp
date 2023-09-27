@@ -80,13 +80,13 @@ void TypeAnalyzer::AnalyzeUnaryExpression(AST::UnaryExpression& expr)
     AnalyzeExpression(expr.operand);
     switch (expr.operation) {
         case AST::negation:
-            if (IsTypeConvertable({"int64"}, expr.operand.GetType())) 
+            if (IsTypeConvertable({{"int64"}}, expr.operand.GetType())) 
             {
-                expr.type = {"int64"};
+                expr.type = {{"int64"}};
             }
-            else if (IsTypeConvertable({"float64"}, expr.operand.GetType()))
+            else if (IsTypeConvertable({{"float64"}}, expr.operand.GetType()))
             {
-                expr.type = {"float64"};
+                expr.type = {{"float64"}};
             }
             else 
             {
@@ -94,9 +94,9 @@ void TypeAnalyzer::AnalyzeUnaryExpression(AST::UnaryExpression& expr)
             }
         break;
         case AST::bit_not:
-            if (IsTypeConvertable({"int64"}, expr.operand.GetType())) 
+            if (IsTypeConvertable({{"int64"}}, expr.operand.GetType())) 
             {
-                expr.type = {"int64"};
+                expr.type = {{"int64"}};
             }
             else 
             {
@@ -104,9 +104,9 @@ void TypeAnalyzer::AnalyzeUnaryExpression(AST::UnaryExpression& expr)
             }
         break;
         case AST::logic_not:
-            if (IsTypeConvertable({"bool"}, expr.operand.GetType())) 
+            if (IsTypeConvertable({{"bool"}}, expr.operand.GetType())) 
             {
-                expr.type = {"bool"};
+                expr.type = {{"bool"}};
             }
             else 
             {
