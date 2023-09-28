@@ -1,5 +1,10 @@
 #include "ASTBuilder.hpp"
-#include "unordered_map"
+#include <unordered_map>
+
+class X 
+{
+    std::vector<X> a;
+};
 
 class TypeAnalyzer
 {

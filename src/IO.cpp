@@ -84,7 +84,6 @@ int main(int argc, const char** argv)
     }
 
     vector<SourceFile> file_contents;
-
     for (auto arg : program_args)
     {
         if (arg[0] != '-')
