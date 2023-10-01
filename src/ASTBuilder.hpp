@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 #include <vector>
 #include <variant>
@@ -168,35 +169,36 @@ class FunctionDefinition
     FunctionDeclaration declation;
     BlockStatement body;
 };
+
+}
 class TranslationUnit
 {
     public:
-    BlockStatement global_scope;
+    AST::BlockStatement global_scope;
 };
-
-}
 
 class ASTBuilder    
 {
-    std::string filename;
-    std::vector<Token> tokens;
-    size_t token_index;
+std::string filename;
+std::vector<Token> tokens;
+size_t token_index;
 
-    AST::VariableType MakeVariableType();
-    AST::FunctionCallExpression MakeFunctionCallExpression();
-    AST::BinaryExpression MakeBinaryExpression();
-    AST::UnaryExpression MakeUnaryExpression();
-    std::variant<AST::SymbolNameExpression, AST::LiteralExpression> MakeSimpleExpression();
-    AST::Expression MakeExpression();
-    AST::BlockStatement MakeBlockStatement();
-    AST::ReturnStatement MakeReturnStatement();
-    AST::IfStatement MakeIfStatement();
-    AST::WhileLoop MakeWhileLoop();
-    AST::AssignmentStatement MakeAssignmentStatement();
-    AST::VariableDefinition MakeVariableDefinition();
-    AST::FunctionDefinition MakeFunctionDefinition();
-    public:
+AST::VariableType MakeVariableType();
+AST::FunctionCallExpression MakeFunctionCallExpression();
+AST::BinaryExpression MakeBinaryExpression();
+AST::UnaryExpression MakeUnaryExpression();
+std::variant<AST::SymbolNameExpression, AST::LiteralExpression> MakeSimpleExpression();
+AST::Expression MakeExpression();
+AST::BlockStatement MakeBlockStatement();
+AST::ReturnStatement MakeReturnStatement();
+AST::IfStatement MakeIfStatement();
+AST::WhileLoop MakeWhileLoop();
+AST::AssignmentStatement MakeAssignmentStatement();
+AST::VariableDeclaration MakeVariableDeclaration();
+AST::VariableDefinition MakeVariableDefinition();
+AST::FunctionDefinition MakeFunctionDefinition();
+public:
 
 
-    void BuildFile(AST::TranslationUnit&, const std::vector<Token>&, std::string);                                                                     
+void BuildFile(TranslationUnit&, const std::vector<Token>&, const std::string&);                                                                     
 };

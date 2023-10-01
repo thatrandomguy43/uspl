@@ -73,8 +73,10 @@ const map<string, TokenType> KEYWORD_TOKEN_IDS
 };
 
 
-vector<Token> SourceFile::TokenizeText()
+vector<Token> Tokenizer::TokenizeText(const std::string& filename, const std::string& filetext)
 {
+    name = filename;
+    text = filetext;
     vector<Token> token_list;
     while (position < text.size())
     {   
@@ -106,7 +108,7 @@ size_t FindNextWordTerminator(const string& text, size_t start_pos)
     return start_pos;
 }
 
-Token SourceFile::TestForToken()
+Token Tokenizer::TestForToken()
 {
 
     if (SYMBOL_TOKEN_IDS.contains(text.substr(position, 2)))
@@ -144,7 +146,7 @@ Token SourceFile::TestForToken()
     return Token{next_word, next_word.length(), identifier};
 }
 
-pair<string, size_t> SourceFile::EscapeText()
+pair<string, size_t> Tokenizer::EscapeText()
 {
     size_t start_pos = position;
     string escaped_output;
@@ -203,7 +205,7 @@ pair<string, size_t> SourceFile::EscapeText()
     return {escaped_output, idx};
 }
 
-Token SourceFile::ProcessTextLiteral()
+Token Tokenizer::ProcessTextLiteral()
 {
     pair<string, size_t> escaped = EscapeText();
     if (text[position] == '\'')
@@ -242,7 +244,7 @@ Token SourceFile::ProcessTextLiteral()
     return Token{nullopt, 1, error_token};
 }
 
-Token SourceFile::ProcessNumberLiteral()
+Token Tokenizer::ProcessNumberLiteral()
 {
     size_t length = 0;
     if (text.substr(position, 2) == "0x")

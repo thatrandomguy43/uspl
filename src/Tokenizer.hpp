@@ -1,9 +1,9 @@
+#pragma once
 #include <string>
 #include <optional>
 #include <vector>
 #include <variant>
-#ifndef TOKENIZER_HPP
-#define TOKENIZER_HPP
+
 enum TokenType
 {
     identifier,
@@ -85,24 +85,25 @@ enum TokenType
 
 class Token
 {
-    using LiteralExpression = std::variant<std::nullopt_t, bool, uint64_t, double, char, std::string>;
-    public:
-    LiteralExpression contents;
-    size_t length;
-    size_t file_position;
-    TokenType type;
-    Token(LiteralExpression contnt, size_t len, TokenType tp)
-     : contents(contnt), length(len), type(tp) {} 
+
+using LiteralExpression = std::variant<std::nullopt_t, bool, uint64_t, double, char, std::string>;
+public:
+LiteralExpression contents;
+size_t length;
+size_t file_position;
+TokenType type;
+Token(LiteralExpression contnt, size_t len, TokenType tp)
+: contents(contnt), length(len), type(tp) {}
+
 };
 
-class SourceFile
+class Tokenizer
 {
-    public:
-    const std::string name;
-    const std::string text;
+    
+    std::string name;
+    std::string text;
 
-    private:
-    size_t position;
+    size_t position = 0;
 
     Token TestForToken();
     Token ProcessTextLiteral();
@@ -110,11 +111,5 @@ class SourceFile
     std::pair<std::string, size_t> EscapeText();
 
     public:
-    SourceFile( const std::string& filename, const std::string& filetext) : name(filename) ,text(filetext), position(0) {}
-    bool operator<(const SourceFile& other) const
-    {
-        return this->name < other.name;
-    }
-    std::vector<Token> TokenizeText();
+    std::vector<Token> TokenizeText(const std::string& filename, const std::string& filetext);
 };
-#endif

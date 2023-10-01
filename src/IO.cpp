@@ -1,5 +1,6 @@
 #include "Tokenizer.hpp"
 #include "ASTBuilder.hpp"
+#include "TypeAnalyzer.hpp"
 #include "IO.hpp"
 #include <iostream>
 #include <fstream>
@@ -9,12 +10,27 @@ using namespace std;
 using namespace IO;
 
 
+class CodeFile
+{
+    public:
+    string name;
+    string source_code;
+    vector<Token> tokens;
+    TranslationUnit tree;
+    string IRFile;
+};
+
 set<string> IO::program_args;
 map<string,vector<IO::CompileError>> error_list;
+chrono::time_point<chrono::high_resolution_clock> start_time;
 
-void PrintErrors(const vector<SourceFile>& files)
-{
-    for (auto file : files)
+void PrintErrors(const vector<CodeFile>& files)
+{   
+    for (const auto& error : error_list["Arguments"])
+    {
+        cout << "Error in program arguments: " << error.error_msg << endl;
+    }
+    for (const auto& file : files)
     {
         size_t line_num = 1;
         size_t char_num = 1;
@@ -24,7 +40,7 @@ void PrintErrors(const vector<SourceFile>& files)
             while (index != error.position) {
                 index++;
                 char_num++;
-                if (file.text[index] == '\n')
+                if (file.source_code[index] == '\n')
                 {
                     line_num++;
                     char_num = 0;
@@ -71,64 +87,76 @@ string GetFileContents(string filename)
 
     return input_storage;
 }
+void PrintTimeElapsed()
+{
+    auto end_time = chrono::high_resolution_clock::now();
+    auto time_elapsed = end_time - start_time;
+    cout << "Time elapsed: " << chrono::duration_cast<chrono::milliseconds>(time_elapsed) << endl;
+}
 
 int main(int argc, const char** argv)
 {
-    auto start_time = chrono::high_resolution_clock::now();
-
+    start_time = chrono::high_resolution_clock::now();
     program_args = GrabCLIArguments(argc, argv);
 
-    if (program_args.size() == 0){
+    vector<CodeFile> files;
+
+    for (auto& arg : program_args)
+    {
+        if (arg[0] != '-')
+        {
+            files.push_back( CodeFile{arg, GetFileContents(arg), {}, {}, {}});
+        }
+    }
+
+    if (files.size() == 0){
         cout << "specify a damn file" << endl;
         return 0xDEE5D1CC;
     }
 
-    vector<SourceFile> file_contents;
-    for (auto arg : program_args)
-    {
-        if (arg[0] != '-')
-        {
-            file_contents.push_back( SourceFile{arg, GetFileContents(arg)});
-        }
-    }
-
     if (not error_list.empty())
     {
-        PrintErrors(file_contents);
+        PrintErrors(files);
+        PrintTimeElapsed();
         return 1;
     }
 
-    map<string, vector<Token>> token_streams;
-
-    for (auto file : file_contents)
+    Tokenizer tokenizer; //duh
+    for (auto& file : files)
     {
-        token_streams[file.name] = file.TokenizeText();
+        file.tokens = tokenizer.TokenizeText(file.name, file.source_code);
         cout << "File " << file.name << " tokenized.\n";
     }
 
     if (not error_list.empty())
     {
-        PrintErrors(file_contents);
+        PrintErrors(files);
+        PrintTimeElapsed();
         return 2;
     }
 
-    map<string, AST::TranslationUnit> file_trees;
     ASTBuilder builder;
-    for (auto stream : token_streams)
+    for (auto& file : files)
     {
-        file_trees.insert({stream.first, AST::TranslationUnit{}});
-        builder.BuildFile(file_trees.at(stream.first), stream.second, stream.first);
-        cout << "Built AST of " << stream.first << "\n";
+        builder.BuildFile(file.tree, file.tokens, file.name);
+        cout << "Built AST of " << file.name << "\n";
     }
 
     if (not error_list.empty())
     {
-        PrintErrors(file_contents);
+        PrintErrors(files);
+        PrintTimeElapsed();
         return 3;
     }
 
-    auto end_time = chrono::high_resolution_clock::now();
-    auto time_elapsed = end_time - start_time;
-    cout << "Time elapsed: " << chrono::duration_cast<chrono::milliseconds>(time_elapsed) << endl;
+    TypeAnalyzer analyzer;
+    for (auto& file : files)
+    {
+        analyzer.AnalyzeBlock(file.tree.global_scope);
+        cout << "Built AST of " << file.name << "\n";
+    }
+
+
+    PrintTimeElapsed();
     return 0;
 }

@@ -219,11 +219,7 @@ void TypeAnalyzer::AnalyzeStatement(AST::Statement& statement)
 {
     switch (statement->index()) {
             case 0:
-                current_scope_depth++;
-                symbols.push_back({});
                 AnalyzeBlock(get<AST::BlockStatement>(*statement));
-                symbols.pop_back();
-                current_scope_depth--;
             break;
             case 1:
                 AnalyzeExpression(get<AST::ReturnStatement>(*statement).value);
@@ -253,15 +249,7 @@ void TypeAnalyzer::AnalyzeStatement(AST::Statement& statement)
 
 void TypeAnalyzer::AnalyzeFunctionDefinition(AST::FunctionDefinition& definition)
 {
-    current_scope_depth++;
-    symbols.push_back({});
-    for (uint8_t param_idx = 0; param_idx < definition.declation.type.parameters.size(); param_idx++)
-    {
-        symbols.at(current_scope_depth).insert({definition.declation.type.parameters.at(param_idx).name, definition.declation.type.parameters.at(param_idx).type});
-    }
-    AnalyzeBlock(definition.body);
-    symbols.pop_back();
-    current_scope_depth--;
+
 }
 
 void TypeAnalyzer::AnalyzeBlock(AST::BlockStatement& block)

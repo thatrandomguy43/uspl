@@ -1,15 +1,12 @@
+#pragma once
 #include "ASTBuilder.hpp"
 #include <unordered_map>
 
-class X 
-{
-    std::vector<X> a;
-};
+
 
 class TypeAnalyzer
 {
-    uint8_t current_scope_depth = 0;
-    std::vector<std::unordered_map<std::string, std::variant<AST::VariableType, AST::FunctionType>>> symbols;
+    std::string filename;
     bool IsTypeConvertable(const AST::VariableType&, const AST::VariableType&);
     std::variant<std::nullopt_t, AST::VariableType, AST::FunctionType> FindTypeOfSymbol(const std::string&);
     void AnalyzeSymbolNameExpression(AST::SymbolNameExpression&);

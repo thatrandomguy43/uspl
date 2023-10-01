@@ -400,21 +400,28 @@ AssignmentStatement ASTBuilder::MakeAssignmentStatement()
     return statement;
 }
 
+VariableDeclaration ASTBuilder::MakeVariableDeclaration()
+{
+    VariableDeclaration declaration;
+    declaration.type = MakeVariableType();
+    if (token_index >= tokens.size() or tokens[token_index].type != identifier)
+    {
+        IO::AddError({filename, tokens[token_index].file_position, "Expected name after variable type."});
+        return declaration;
+    }
+    else 
+    {
+        declaration.name = get<string>(tokens[token_index].contents);
+        token_index++;
+    }
+    return declaration;
+}
+
 VariableDefinition ASTBuilder::MakeVariableDefinition()
 {
     VariableDefinition definition;
 
-    definition.declaration.type = MakeVariableType();
-    if (token_index >= tokens.size() or tokens[token_index].type != identifier)
-    {
-        IO::AddError({filename, tokens[token_index].file_position, "Expected name after variable type."});
-        return definition;
-    }
-    else 
-    {
-        definition.declaration.name = get<string>(tokens[token_index].contents);
-    }
-    token_index++;
+    definition.declaration = MakeVariableDeclaration();
     if (token_index >= tokens.size() or tokens[token_index].type != operator_assignment)
     {
         IO::AddError({filename, tokens[token_index].file_position, "Expected assignment after variable name."});
@@ -451,49 +458,15 @@ FunctionDefinition ASTBuilder::MakeFunctionDefinition()
     {
         IO::AddError({filename, tokens[token_index].file_position, "Expected \'(\' to open function parameter list"});
     }
-    token_index++;
-    while (tokens[token_index].type == identifier or tokens[token_index].type == seperator)
+    do
     {
         token_index++;
-        if (token_index >= tokens.size())
+        if (tokens[token_index].type != close_parentheses)
         {
-            IO::AddError({filename, tokens.back().file_position, "Unexpected end of file inside function definition."});
-            return definition;
-        }
-        definition.declation.type.parameters.push_back({});
-        if (tokens[token_index].type == identifier) 
-        {
-            definition.declation.type.parameters.back().type = MakeVariableType();
-        }
-        else 
-        {
-            IO::AddError({filename, tokens[token_index].file_position, "Expected function parameter type name."});
-        }
-        token_index++;
-        if (token_index >= tokens.size())
-        {
-            IO::AddError({filename, tokens.back().file_position, "Unexpected end of file inside function definition."});
-            return definition;
-        }
-        if (tokens[token_index].type == identifier) 
-        {
-            definition.declation.type.parameters.back().name = get<string>(tokens[token_index].contents);
-        }
-        else 
-        {
-            IO::AddError({filename, tokens[token_index].file_position, "Expected function parameter name."});
-        }
-        token_index++;
-        if (token_index >= tokens.size())
-        {
-            IO::AddError({filename, tokens.back().file_position, "Unexpected end of file inside function definition."});
-            return definition;
-        }
-        if (tokens[token_index].type != seperator and tokens[token_index].type != close_parentheses) 
-        {
-            IO::AddError({filename, tokens[token_index].file_position, "Expected \',\' between function parameters."});
+            definition.declation.type.parameters.push_back(MakeVariableDeclaration());
         }
     }
+    while (tokens[token_index].type == seperator);
     token_index++;
     if (tokens[token_index].type == identifier) 
     {
@@ -510,7 +483,7 @@ FunctionDefinition ASTBuilder::MakeFunctionDefinition()
     return definition;
 }
 
-void ASTBuilder::BuildFile(TranslationUnit& root, const std::vector<Token>& token_source, std::string source_filename)
+void ASTBuilder::BuildFile(TranslationUnit& root, const std::vector<Token>& token_source, const std::string& source_filename)
 {
     token_index = 0;
     tokens = token_source;
