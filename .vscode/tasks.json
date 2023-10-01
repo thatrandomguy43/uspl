@@ -15,7 +15,8 @@
 					"-Wall",
 					"src/IO.cpp",
 					"src/Tokenizer.cpp",
-					"src/ASTBuilder.cpp"
+					"src/ASTBuilder.cpp",
+					"src/TypeAnalyzer.cpp"
 				],
 				"group": {
 					"kind": "build",

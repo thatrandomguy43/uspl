@@ -52,13 +52,15 @@ class BlockStatement;
 class ReturnStatement;
 class IfStatement;
 class WhileLoop;
-//the nullopt is just so i dont get a compile error when assingnning the contents of a literal value token to it
-//the compiler dosent know that nullopt does not happen if the token type is a literal
 
 class UnqualifiedType 
 {
     public:
     std::string identifier;
+    bool operator<(const UnqualifiedType& other) const
+    {
+        return identifier < other.identifier;
+    }
 };
 //shit i noticed i dont have a way to print qualified type names
 class VariableType

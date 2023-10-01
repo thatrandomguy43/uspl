@@ -153,9 +153,15 @@ int main(int argc, const char** argv)
     for (auto& file : files)
     {
         analyzer.AnalyzeBlock(file.tree.global_scope);
-        cout << "Built AST of " << file.name << "\n";
+        cout << "Type-checked " << file.name << "\n";
     }
 
+    if (not error_list.empty())
+    {
+        PrintErrors(files);
+        PrintTimeElapsed();
+        return 4;
+    }
 
     PrintTimeElapsed();
     return 0;

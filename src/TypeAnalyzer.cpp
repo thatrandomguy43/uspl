@@ -1,5 +1,6 @@
 #include "TypeAnalyzer.hpp"
 #include "IO.hpp"
+
 using namespace std;
 
 bool TypeAnalyzer::IsTypeConvertable(const AST::VariableType& to, const AST::VariableType& from)
@@ -10,12 +11,10 @@ bool TypeAnalyzer::IsTypeConvertable(const AST::VariableType& to, const AST::Var
         {"int32"},
         {"int64"},
     };
-
     const set<AST::UnqualifiedType> FLOAT_TYPES = {
         {"float32"},
         {"float64"},
     };
-
     if (to.level_of_indirection == 0 and from.level_of_indirection == 0)
     {
         if (INTEGER_TYPES.contains(from.base))
@@ -36,12 +35,12 @@ bool TypeAnalyzer::IsTypeConvertable(const AST::VariableType& to, const AST::Var
 
 void TypeAnalyzer::AnalyzeSymbolNameExpression(AST::SymbolNameExpression& expr)
 {
-    variant<nullopt_t, AST::VariableType, AST::FunctionType> type = FindTypeOfSymbol(expr.name);
-    if (type.index() == 1) 
+
+    if (true) 
     {
-        expr.type = get<AST::VariableType>(type);
+
     }
-    else if (type.index() == 2)
+    else if (true)
     {
         IO::AddError({"Placeholder filename", 0, "'" + expr.name + "' is a function, and cannot be used as an expression on its own. Functions must be called to be an expression. (as it is in this currently function pointer-less language)"});
     }
@@ -167,6 +166,11 @@ void TypeAnalyzer::AnalyzeBinaryExpression(AST::BinaryExpression& expr)
         break;
     }
 }
+void TypeAnalyzer::AnalyzeFunctionCall(AST::FunctionCallExpression& expr)
+{
+
+}
+
 
 void TypeAnalyzer::AnalyzeExpression(AST::Expression& expr)
 {
@@ -192,27 +196,14 @@ void TypeAnalyzer::AnalyzeExpression(AST::Expression& expr)
 void TypeAnalyzer::CheckAssignment(AST::AssignmentStatement& assignment)
 {
     AnalyzeExpression(assignment.value);
-    variant<nullopt_t, AST::VariableType, AST::FunctionType> target_type = FindTypeOfSymbol(assignment.target_name);
-    if (target_type.index() == 1 and IsTypeConvertable(get<AST::VariableType>(target_type), assignment.value.GetType()))
-    {
-        
-    }
-    else 
-    {
-    
-    }
+
+
 }
 void TypeAnalyzer::CheckVariableDefinition(AST::VariableDefinition& definition)
 {
     AnalyzeExpression(definition.value);
-    if (IsTypeConvertable(definition.declaration.type, definition.value.GetType()))
-    {
-    
-    }
-    else 
-    {
-    
-    }
+
+
 }
 
 void TypeAnalyzer::AnalyzeStatement(AST::Statement& statement)
