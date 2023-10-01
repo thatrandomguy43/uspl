@@ -74,6 +74,7 @@ VariableType ASTBuilder::MakeVariableType()
     {
         type.base.identifier = get<string>(tokens[token_index].contents);
     }
+    token_index++;
     while (tokens[token_index].type == operator_pointer)
     {
         type.level_of_indirection++;
@@ -329,7 +330,8 @@ BlockStatement ASTBuilder::MakeBlockStatement()
                     }
                     else
                     {
-                        IO::AddError({filename, tokens[token_index + 1].file_position, "Text is not a valid statement."});
+                        IO::AddError({filename, tokens[token_index + 1].file_position, "Identifier is not a valid statement."});
+                        token_index++;
                     }
                 }
                 else 
@@ -347,7 +349,7 @@ BlockStatement ASTBuilder::MakeBlockStatement()
                 block.statements.push_back(make_unique<StatValue>(MakeReturnStatement()));
             break;
             default:
-                IO::AddError({filename, tokens[token_index].file_position, "Text is not a valid statement."});
+                IO::AddError({filename, tokens[token_index].file_position, "Keyword does not begin a valid statement."});
                 token_index++;
             break;
         }
@@ -402,7 +404,7 @@ VariableDefinition ASTBuilder::MakeVariableDefinition()
 {
     VariableDefinition definition;
 
-    token_index++;
+    definition.declaration.type = MakeVariableType();
     if (token_index >= tokens.size() or tokens[token_index].type != identifier)
     {
         IO::AddError({filename, tokens[token_index].file_position, "Expected name after variable type."});
@@ -433,14 +435,13 @@ FunctionDefinition ASTBuilder::MakeFunctionDefinition()
     FunctionDefinition definition;
     token_index++;
 
-    if (token_index < tokens.size() and tokens[token_index].type == identifier) {
+    if (token_index < tokens.size() and (tokens[token_index].type == keyword_var or tokens[token_index].type == keyword_const)) {
         definition.declation.type.return_type = MakeVariableType();
     }
     else 
     {
-        IO::AddError({filename, tokens[token_index].file_position, "Expected function return type name."});
+        IO::AddError({filename, tokens[token_index].file_position, "Expected function return type (must be qualified with either 'var' ot 'const')."});
     }
-    token_index++;
     if (token_index >= tokens.size())
     {
         IO::AddError({filename, tokens.back().file_position, "Unexpected end of file inside function definition."});

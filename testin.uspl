@@ -1,4 +1,4 @@
-function int32() main 
+function var int32() main 
 do
     var int32 sus = 4
     sus = 3 + sus
