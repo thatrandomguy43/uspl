@@ -60,7 +60,7 @@ QualifiedType Expression::GetType() const
     return {};
 }
 
-QualifiedType ASTBuilder::MakeQualifiedType(optional<vector<string>* const> parameter_names = nullopt)
+QualifiedType ASTBuilder::MakeQualifiedType()
 {
     QualifiedType type;
     bool is_function_type = false;
@@ -75,19 +75,19 @@ QualifiedType ASTBuilder::MakeQualifiedType(optional<vector<string>* const> para
         return type;
     }
     type.is_const = true ? tokens[token_index].type == keyword_const : false;
-    if (not type.is_const and tokens[token_index].type == keyword_var)
+    if (not type.is_const and tokens[token_index].type != keyword_var)
     {
-        IO::AddError({filename, tokens[token_index].file_position, "Mutablility must be speci"});
+        IO::AddError({filename, tokens[token_index].file_position, "Mutablility must be specified with either 'var' or 'const' (mostly to make it easier to parse)."});
     }
-    token_index++;
+    else token_index++;
     if (token_index >= tokens.size() or tokens[token_index].type != identifier)
     {
-        IO::AddError({filename, tokens[token_index].file_position, "Expected type name after var or const."});
+        IO::AddError({filename, tokens[token_index].file_position, "Expected type name here."});
         return type;
     } 
     else 
     {
-        type.base.identifier = get<string>(tokens[token_index].contents);
+        type.base = get<string>(tokens[token_index].contents);
     }
     token_index++;
     while (tokens[token_index].type == operator_pointer)
@@ -95,7 +95,36 @@ QualifiedType ASTBuilder::MakeQualifiedType(optional<vector<string>* const> para
         type.level_of_indirection++;
         token_index++;
     }
-        
+    if (not is_function_type)
+        return type;
+
+
+
+    if (token_index >= tokens.size())
+    {
+        IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file during function type."});
+        return type;
+    }
+    if (tokens[token_index].type != open_parentheses)
+    {
+        IO::AddError({filename, tokens[token_index].file_position, "Expected '(' to begin parameter list."});
+        return type;
+    }
+    token_index++;
+    type.parameters = vector<Declaration>{};
+    while (token_index < tokens.size() and tokens[token_index].type != close_parentheses)
+    {
+        type.parameters.value().push_back({MakeQualifiedType(), ""});
+        if (tokens[token_index].type == identifier)
+        {
+            type.parameters.value().back().name = get<string>(tokens[token_index].contents);
+            token_index++;
+        }
+    if (tokens[token_index].type != seperator and tokens[token_index].type != close_parentheses)
+        IO::AddError({filename, tokens[token_index].file_position, "Expected ',' between function parameters."});
+    else if (tokens[token_index].type == seperator) token_index++;
+    }
+    token_index++;
     return type;
 }
 
@@ -423,7 +452,7 @@ Declaration ASTBuilder::MakeDeclaration()
     declaration.type = MakeQualifiedType();
     if (token_index >= tokens.size() or tokens[token_index].type != identifier)
     {
-        IO::AddError({filename, tokens[token_index].file_position, "Expected name after variable type."});
+        IO::AddError({filename, tokens[token_index].file_position, "Expected name after type."});
         return declaration;
     }
     else 
@@ -457,44 +486,15 @@ VariableDefinition ASTBuilder::MakeVariableDefinition()
 FunctionDefinition ASTBuilder::MakeFunctionDefinition()
 {
     FunctionDefinition definition;
-    token_index++;
     
-    if (token_index < tokens.size() and (tokens[token_index].type == keyword_var or tokens[token_index].type == keyword_const)) {
-        definition.declation.type = MakeQualifiedType();
-    }
-    else 
-    {
-        IO::AddError({filename, tokens[token_index].file_position, "Expected function return type (must be qualified with either 'var' ot 'const')."});
-    }
+    definition.declation = MakeDeclaration();
+
     if (token_index >= tokens.size())
     {
-        IO::AddError({filename, tokens.back().file_position, "Unexpected end of file inside function definition."});
+        IO::AddError({filename, tokens.back().file_position, "Unexpected end of file instead of function body."});
         return definition;
     }
-    if (tokens[token_index].type != open_parentheses)
-    {
-        IO::AddError({filename, tokens[token_index].file_position, "Expected \'(\' to open function parameter list"});
-    }
-    do
-    {
-        token_index++;
-        if (tokens[token_index].type != close_parentheses)
-        {
-            definition.declation.type.parameters.value().push_back(MakeDeclaration());
-        }
-    }
-    while (tokens[token_index].type == seperator);
-    token_index++;
-    if (tokens[token_index].type == identifier) 
-    {
-        definition.declation.name = get<string>(tokens[token_index].contents);
-    }
-    else 
-    {
-        IO::AddError({filename, tokens[token_index].file_position, "Expected function name."});
-    }
 
-    token_index++;
     definition.body = MakeBlockStatement();
 
     return definition;
@@ -505,7 +505,7 @@ void ASTBuilder::BuildFile(TranslationUnit& root, const std::vector<Token>& toke
     token_index = 0;
     tokens = token_source;
     filename = source_filename;
-    while (token_index < tokens.size())
+    while (token_index < tokens.size() and tokens[token_index].type != error_token)
     {
         switch (tokens[token_index].type) 
         {

@@ -5,15 +5,15 @@ using namespace std;
 
 bool TypeAnalyzer::IsTypeConvertable(const AST::QualifiedType& to, const AST::QualifiedType& from)
 {
-    const set<AST::UnqualifiedType> INTEGER_TYPES = {
-        {"int8"},
-        {"int16"},
-        {"int32"},
-        {"int64"},
+    const set<string> INTEGER_TYPES = {
+        "int8",
+        "int16",
+        "int32",
+        "int64",
     };
-    const set<AST::UnqualifiedType> FLOAT_TYPES = {
-        {"float32"},
-        {"float64"},
+    const set<string> FLOAT_TYPES = {
+        "float32",
+        "float64",
     };
     if (to.level_of_indirection == 0 and from.level_of_indirection == 0)
     {
@@ -33,6 +33,15 @@ bool TypeAnalyzer::IsTypeConvertable(const AST::QualifiedType& to, const AST::Qu
     return false;
 }
 
+optional<AST::QualifiedType> TypeAnalyzer::FindTypeOfSymbol(const string& symbol)
+{
+    optional<AST::QualifiedType> type;
+    vector<const AST::BlockStatement*> blocks_in_scope;
+    
+
+    return type;
+}
+
 void TypeAnalyzer::AnalyzeSymbolNameExpression(AST::SymbolNameExpression& expr)
 {
 
@@ -42,11 +51,11 @@ void TypeAnalyzer::AnalyzeSymbolNameExpression(AST::SymbolNameExpression& expr)
     }
     else if (true)
     {
-        IO::AddError({"Placeholder filename", 0, "'" + expr.name + "' is a function, and cannot be used as an expression on its own. Functions must be called to be an expression. (as it is in this currently function pointer-less language)"});
+        IO::AddError({ filename, 0, "'" + expr.name + "' is a function, and cannot be used as an expression on its own. Functions must be called to be an expression. (as it is in this currently function pointer-less language)"});
     }
     else 
     {
-         IO::AddError({"Placeholder filename", 0, "Use of undeclared identifier '" + expr.name + "'"});
+         IO::AddError({ filename, 0, "Use of undeclared identifier '" + expr.name + "'"});
     }
 }
 
@@ -55,19 +64,19 @@ void TypeAnalyzer::AnalyzeLiteralExpression(AST::LiteralExpression& literal)
     switch (literal.value.index()) 
     {
         case 1:
-            literal.type.base = {"bool"};
+            literal.type.base = "bool";
         break;
         case 2:
-            literal.type.base = {"int64"};
+            literal.type.base = "int64";
         break;
         case 3:
-            literal.type.base = {"float64"};
+            literal.type.base = "float64";
         break;
         case 4:
-            literal.type.base = {"char"};
+            literal.type.base = "char";
         break;
         case 5:
-            literal.type.base = {"char"};
+            literal.type.base = "char";
             literal.type.level_of_indirection = 1;
             literal.type.is_const = true;
         break;
@@ -89,7 +98,7 @@ void TypeAnalyzer::AnalyzeUnaryExpression(AST::UnaryExpression& expr)
             }
             else 
             {
-                IO::AddError({"Placeholder file", 0, "Cannot perform negation on non-numerical type " + expr.operand.GetType().base.identifier + "."} );
+                IO::AddError({ filename, 0, "Cannot perform negation on non-numerical type " + expr.operand.GetType().base + "."} );
             }
         break;
         case AST::bit_not:
@@ -99,7 +108,7 @@ void TypeAnalyzer::AnalyzeUnaryExpression(AST::UnaryExpression& expr)
             }
             else 
             {
-                IO::AddError({"Placeholder file", 0, "Cannot perform bitwise NOT on non-integer type " + expr.operand.GetType().base.identifier + "."} );
+                IO::AddError({ filename, 0, "Cannot perform bitwise NOT on non-integer type " + expr.operand.GetType().base + "."} );
             }
         break;
         case AST::logic_not:
@@ -109,7 +118,7 @@ void TypeAnalyzer::AnalyzeUnaryExpression(AST::UnaryExpression& expr)
             }
             else 
             {
-                IO::AddError({"Placeholder file", 0, "Cannot perform logical NOT on non-boolean type " + expr.operand.GetType().base.identifier + "."} );
+                IO::AddError({ filename, 0, "Cannot perform logical NOT on non-boolean type " + expr.operand.GetType().base + "."} );
             }      
         break;
         case AST::address:
@@ -120,7 +129,7 @@ void TypeAnalyzer::AnalyzeUnaryExpression(AST::UnaryExpression& expr)
             }
             else 
             {
-                IO::AddError({"Placeholder file", 0, "Can only get address of variables (lvalues), and not other types of expression (rvalues)."} );
+                IO::AddError({ filename, 0, "Can only get address of variables (lvalues), and not other types of expression (rvalues)."} );
             }
         break;
         case AST::dereference:
@@ -131,7 +140,7 @@ void TypeAnalyzer::AnalyzeUnaryExpression(AST::UnaryExpression& expr)
             }
             else 
             {
-                IO::AddError({"Placeholder file", 0, "Cannot dereference non-pointer type " + expr.operand.GetType().base.identifier + "."} );
+                IO::AddError({ filename, 0, "Cannot dereference non-pointer type " + expr.operand.GetType().base + "."} );
             }
         break;
     }

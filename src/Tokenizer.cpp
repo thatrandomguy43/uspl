@@ -90,6 +90,8 @@ vector<Token> Tokenizer::TokenizeText(const std::string& filename, const std::st
         position += parsed.length;
         token_list.push_back(parsed);
     }
+    //this is a rather silly solution but might prevent a few crashes while parsing
+    for (int i = 0; i != 5; i++) token_list.push_back({nullopt, 0, error_token});
     return token_list;
 }
 

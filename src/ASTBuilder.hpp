@@ -52,16 +52,12 @@ class ReturnStatement;
 class IfStatement;
 class WhileLoop;
 class Declaration;
-class UnqualifiedType 
-{
-    public:
-    std::string identifier;
-};
+
 //shit i noticed i dont have a way to print qualified type names
 class QualifiedType
 {
     public:
-    UnqualifiedType base;
+    std::string base;
     bool is_const = false;
     int8_t level_of_indirection = 0;
     std::optional<std::vector<Declaration>> parameters;
@@ -140,8 +136,8 @@ class WhileLoop
 class Declaration
 {
     public:
-    std::string name;
     QualifiedType type;
+    std::string name;
 };
 class VariableDefinition
 {
@@ -170,7 +166,7 @@ std::string filename;
 std::vector<Token> tokens;
 size_t token_index;
 
-AST::QualifiedType MakeQualifiedType(std::optional<std::vector<std::string>* const>);
+AST::QualifiedType MakeQualifiedType();
 AST::FunctionCallExpression MakeFunctionCallExpression();
 AST::BinaryExpression MakeBinaryExpression();
 AST::UnaryExpression MakeUnaryExpression();

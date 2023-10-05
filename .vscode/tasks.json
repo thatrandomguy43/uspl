@@ -10,7 +10,6 @@
 					"--output=uspl_compiler.exe",
 					"-g",
 					"-O0",
-					"-fno-inline-functions",
 					"-std=c++2b",
 					"-Wall",
 					"src/IO.cpp",
