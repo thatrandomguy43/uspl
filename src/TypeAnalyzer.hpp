@@ -7,6 +7,7 @@
 class TypeAnalyzer
 {
     std::string filename;
+    std::vector<int16_t> scope;
     bool IsTypeConvertable(const AST::VariableType&, const AST::VariableType&);
     std::variant<std::nullopt_t, AST::VariableType, AST::FunctionType> FindTypeOfSymbol(const std::string&);
     void AnalyzeSymbolNameExpression(AST::SymbolNameExpression&);

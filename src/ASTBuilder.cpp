@@ -37,7 +37,7 @@ const map<TokenType, BinaryOpType> BINARY_OPERATORS
     {operator_greater_or_equal, greaterthan_equals}
 };
 
-VariableType Expression::GetType()
+VariableType Expression::GetType() const
 {
     switch (value->index()) 
     {
@@ -312,7 +312,9 @@ BlockStatement ASTBuilder::MakeBlockStatement()
         {
             case keyword_var:                                                                                             
             case keyword_const:
-                block.statements.push_back(make_unique<StatValue>(MakeVariableDefinition()));
+                block.statements.push_back({});
+                block.statements.back() = make_unique<StatValue>(MakeVariableDefinition());
+                //block.statements.back().scope = 
             break;
             case keyword_function:
                 block.statements.push_back(make_unique<StatValue>(MakeFunctionDefinition()));

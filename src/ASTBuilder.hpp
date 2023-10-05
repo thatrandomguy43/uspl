@@ -40,7 +40,6 @@ enum UnaryOpType
 };
 
 
-
 class AssignmentStatement;
 class VariableDefinition;
 class FunctionDefinition;
@@ -80,13 +79,14 @@ class Expression
 {
     public:
     std::unique_ptr<std::variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression, FunctionCallExpression>> value;
-    VariableType GetType();
+    VariableType GetType() const;
 };
 class SymbolNameExpression
 {
     public:
     std::string name;
     VariableType type;
+
 };
 
 class BinaryExpression
@@ -111,13 +111,12 @@ class FunctionCallExpression
     std::vector<Expression> args;
     VariableType type;
 };
-
 using Statement = std::unique_ptr<std::variant<BlockStatement, ReturnStatement, IfStatement, WhileLoop, AssignmentStatement, FunctionCallExpression, VariableDefinition, FunctionDefinition>>;
 class AssignmentStatement
 {
     public:
     std::string target_name;
-    Expression value; 
+    Expression value;
 };
 class BlockStatement
 {

@@ -240,7 +240,7 @@ void TypeAnalyzer::AnalyzeStatement(AST::Statement& statement)
 
 void TypeAnalyzer::AnalyzeFunctionDefinition(AST::FunctionDefinition& definition)
 {
-
+    
 }
 
 void TypeAnalyzer::AnalyzeBlock(AST::BlockStatement& block)
