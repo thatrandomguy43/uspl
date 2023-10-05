@@ -3,7 +3,7 @@
 
 using namespace std;
 
-bool TypeAnalyzer::IsTypeConvertable(const AST::VariableType& to, const AST::VariableType& from)
+bool TypeAnalyzer::IsTypeConvertable(const AST::QualifiedType& to, const AST::QualifiedType& from)
 {
     const set<AST::UnqualifiedType> INTEGER_TYPES = {
         {"int8"},
@@ -240,13 +240,15 @@ void TypeAnalyzer::AnalyzeStatement(AST::Statement& statement)
 
 void TypeAnalyzer::AnalyzeFunctionDefinition(AST::FunctionDefinition& definition)
 {
-    
+    AnalyzeBlock(definition.body);
 }
 
 void TypeAnalyzer::AnalyzeBlock(AST::BlockStatement& block)
 {
-    for (auto& statement : block.statements)
+    scope.push_back(0);
+    for (; scope.back() < block.statements.size(); scope.back()++)
     {
-        AnalyzeStatement(statement);
+        AnalyzeStatement(block.statements[scope.back()]);
     }
+    scope.pop_back();
 }

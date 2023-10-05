@@ -37,7 +37,7 @@ const map<TokenType, BinaryOpType> BINARY_OPERATORS
     {operator_greater_or_equal, greaterthan_equals}
 };
 
-VariableType Expression::GetType() const
+QualifiedType Expression::GetType() const
 {
     switch (value->index()) 
     {
@@ -60,10 +60,25 @@ VariableType Expression::GetType() const
     return {};
 }
 
-VariableType ASTBuilder::MakeVariableType()
+QualifiedType ASTBuilder::MakeQualifiedType(optional<vector<string>* const> parameter_names = nullopt)
 {
-    VariableType type;
+    QualifiedType type;
+    bool is_function_type = false;
+    if (tokens[token_index].type == keyword_function)
+    {
+        is_function_type = true;
+        token_index++;
+    }
+    if (token_index >= tokens.size())
+    {
+        IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file during type."});
+        return type;
+    }
     type.is_const = true ? tokens[token_index].type == keyword_const : false;
+    if (not type.is_const and tokens[token_index].type == keyword_var)
+    {
+        IO::AddError({filename, tokens[token_index].file_position, "Mutablility must be speci"});
+    }
     token_index++;
     if (token_index >= tokens.size() or tokens[token_index].type != identifier)
     {
@@ -314,10 +329,10 @@ BlockStatement ASTBuilder::MakeBlockStatement()
             case keyword_const:
                 block.statements.push_back({});
                 block.statements.back() = make_unique<StatValue>(MakeVariableDefinition());
-                //block.statements.back().scope = 
             break;
             case keyword_function:
-                block.statements.push_back(make_unique<StatValue>(MakeFunctionDefinition()));
+                IO::AddError({filename, tokens[token_index].file_position, "Function definition inside function definition not allowed."});
+                token_index++;
             break;
             case identifier:
                 if (token_index + 1 < tokens.size()) 
@@ -402,10 +417,10 @@ AssignmentStatement ASTBuilder::MakeAssignmentStatement()
     return statement;
 }
 
-VariableDeclaration ASTBuilder::MakeVariableDeclaration()
+Declaration ASTBuilder::MakeDeclaration()
 {
-    VariableDeclaration declaration;
-    declaration.type = MakeVariableType();
+    Declaration declaration;
+    declaration.type = MakeQualifiedType();
     if (token_index >= tokens.size() or tokens[token_index].type != identifier)
     {
         IO::AddError({filename, tokens[token_index].file_position, "Expected name after variable type."});
@@ -423,7 +438,7 @@ VariableDefinition ASTBuilder::MakeVariableDefinition()
 {
     VariableDefinition definition;
 
-    definition.declaration = MakeVariableDeclaration();
+    definition.declaration = MakeDeclaration();
     if (token_index >= tokens.size() or tokens[token_index].type != operator_assignment)
     {
         IO::AddError({filename, tokens[token_index].file_position, "Expected assignment after variable name."});
@@ -443,9 +458,9 @@ FunctionDefinition ASTBuilder::MakeFunctionDefinition()
 {
     FunctionDefinition definition;
     token_index++;
-
+    
     if (token_index < tokens.size() and (tokens[token_index].type == keyword_var or tokens[token_index].type == keyword_const)) {
-        definition.declation.type.return_type = MakeVariableType();
+        definition.declation.type = MakeQualifiedType();
     }
     else 
     {
@@ -465,7 +480,7 @@ FunctionDefinition ASTBuilder::MakeFunctionDefinition()
         token_index++;
         if (tokens[token_index].type != close_parentheses)
         {
-            definition.declation.type.parameters.push_back(MakeVariableDeclaration());
+            definition.declation.type.parameters.value().push_back(MakeDeclaration());
         }
     }
     while (tokens[token_index].type == seperator);

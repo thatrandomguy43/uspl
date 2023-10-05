@@ -51,41 +51,38 @@ class BlockStatement;
 class ReturnStatement;
 class IfStatement;
 class WhileLoop;
-
+class Declaration;
 class UnqualifiedType 
 {
     public:
     std::string identifier;
-    bool operator<(const UnqualifiedType& other) const
-    {
-        return identifier < other.identifier;
-    }
 };
 //shit i noticed i dont have a way to print qualified type names
-class VariableType
+class QualifiedType
 {
     public:
     UnqualifiedType base;
     bool is_const = false;
     int8_t level_of_indirection = 0;
+    std::optional<std::vector<Declaration>> parameters;
 };
 class LiteralExpression
 {
     public:
     std::variant<std::nullopt_t, bool, uint64_t, double, char, std::string> value;
-    VariableType type;
+    QualifiedType type;
 };
 class Expression
 {
     public:
     std::unique_ptr<std::variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression, FunctionCallExpression>> value;
-    VariableType GetType() const;
+    QualifiedType GetType() const;
 };
 class SymbolNameExpression
 {
     public:
     std::string name;
-    VariableType type;
+    QualifiedType type;
 
 };
 
@@ -95,21 +92,21 @@ class BinaryExpression
     Expression left_operand;
     Expression right_operand;
     BinaryOpType operation;
-    VariableType type;
+    QualifiedType type;
 };
 class UnaryExpression
 {
     public:
     Expression operand;
     UnaryOpType operation;
-    VariableType type;
+    QualifiedType type;
 };
 class FunctionCallExpression
 {
     public:
     std::string identifier;
     std::vector<Expression> args;
-    VariableType type;
+    QualifiedType type;
 };
 using Statement = std::unique_ptr<std::variant<BlockStatement, ReturnStatement, IfStatement, WhileLoop, AssignmentStatement, FunctionCallExpression, VariableDefinition, FunctionDefinition>>;
 class AssignmentStatement
@@ -140,34 +137,23 @@ class WhileLoop
     BlockStatement content;
     Expression condition;
 };
-class VariableDeclaration
+class Declaration
 {
     public:
     std::string name;
-    VariableType type;
+    QualifiedType type;
 };
 class VariableDefinition
 {
     public:
-    VariableDeclaration declaration;
+    Declaration declaration;
     Expression value;
-};
-class FunctionType
-{
-    public:
-    VariableType return_type;
-    std::vector<VariableDeclaration> parameters;
-};
-class FunctionDeclaration
-{
-    public:
-    FunctionType type;
-    std::string name;
 };
 class FunctionDefinition
 {
     public:
-    FunctionDeclaration declation;
+    Declaration declation;
+    std::vector<std::string> param_names;
     BlockStatement body;
 };
 
@@ -184,7 +170,7 @@ std::string filename;
 std::vector<Token> tokens;
 size_t token_index;
 
-AST::VariableType MakeVariableType();
+AST::QualifiedType MakeQualifiedType(std::optional<std::vector<std::string>* const>);
 AST::FunctionCallExpression MakeFunctionCallExpression();
 AST::BinaryExpression MakeBinaryExpression();
 AST::UnaryExpression MakeUnaryExpression();
@@ -195,7 +181,7 @@ AST::ReturnStatement MakeReturnStatement();
 AST::IfStatement MakeIfStatement();
 AST::WhileLoop MakeWhileLoop();
 AST::AssignmentStatement MakeAssignmentStatement();
-AST::VariableDeclaration MakeVariableDeclaration();
+AST::Declaration MakeDeclaration();
 AST::VariableDefinition MakeVariableDefinition();
 AST::FunctionDefinition MakeFunctionDefinition();
 public:
