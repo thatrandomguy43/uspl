@@ -152,7 +152,7 @@ int main(int argc, const char** argv)
     TypeAnalyzer analyzer;
     for (auto& file : files)
     {
-        analyzer.AnalyzeBlock(file.tree.global_scope);
+        analyzer.AnalyzeTranslationUnit(file.tree);
         cout << "Type-checked " << file.name << "\n";
     }
 

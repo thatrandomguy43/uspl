@@ -3,7 +3,7 @@
 
 using namespace std;
 
-bool TypeAnalyzer::IsTypeConvertable(const AST::QualifiedType& to, const AST::QualifiedType& from)
+bool TypeAnalyzer::IsTypeConvertable(const AST::QualifiedType& to, const AST::QualifiedType& from) const
 {
     const set<string> INTEGER_TYPES = {
         "int8",
@@ -33,11 +33,28 @@ bool TypeAnalyzer::IsTypeConvertable(const AST::QualifiedType& to, const AST::Qu
     return false;
 }
 
-optional<AST::QualifiedType> TypeAnalyzer::FindTypeOfSymbol(const string& symbol)
+optional<AST::QualifiedType> TypeAnalyzer::FindTypeOfSymbol(const string& symbol) const
 {
     optional<AST::QualifiedType> type;
-    vector<const AST::BlockStatement*> blocks_in_scope;
-    
+    const AST::BlockStatement* block = global_scope;
+    for (size_t block_idx = 0; block_idx < scope.size(); block_idx++)
+    {
+        for (size_t statement_idx = 0; statement_idx < scope[block_idx]; statement_idx++)
+        {
+            if (block->statements[statement_idx]->index() == 6) 
+            {
+                const AST::VariableDefinition& definition = get<AST::VariableDefinition>(*block->statements[statement_idx]);
+                if (definition.declaration.name == symbol)
+                    return definition.declaration.type;
+            }
+            else if (block->statements[statement_idx]->index() == 7)
+            {
+                const AST::VariableDefinition& definition = get<AST::VariableDefinition>(*block->statements[statement_idx]);
+                if (definition.declaration.name == symbol)
+                    return definition.declaration.type;
+            }
+        }
+    }
 
     return type;
 }
@@ -260,4 +277,10 @@ void TypeAnalyzer::AnalyzeBlock(AST::BlockStatement& block)
         AnalyzeStatement(block.statements[scope.back()]);
     }
     scope.pop_back();
+}
+
+void TypeAnalyzer::AnalyzeTranslationUnit(TranslationUnit& unit)
+{
+    global_scope = &unit.global_scope;
+    AnalyzeBlock(unit.global_scope);
 }

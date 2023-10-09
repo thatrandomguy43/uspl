@@ -149,7 +149,6 @@ class FunctionDefinition
 {
     public:
     Declaration declation;
-    std::vector<std::string> param_names;
     BlockStatement body;
 };
 
