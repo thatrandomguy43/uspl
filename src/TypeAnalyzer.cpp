@@ -3,6 +3,7 @@
 
 using namespace std;
 
+//this whole solution is rather bad, i will probably need some more practical way to define conversions
 bool TypeAnalyzer::IsTypeConvertable(const AST::QualifiedType& to, const AST::QualifiedType& from) const
 {
     const set<string> INTEGER_TYPES = {
@@ -125,7 +126,7 @@ void TypeAnalyzer::AnalyzeUnaryExpression(AST::UnaryExpression& expr)
             }
             else 
             {
-                IO::AddError({ filename, 0, "Cannot perform bitwise NOT on non-integer type " + expr.operand.GetType().base + "."} );
+                IO::AddError({ filename, 0, "Cannot perform bitwise operations on non-integer type " + expr.operand.GetType().base + "."} );
             }
         break;
         case AST::logic_not:
@@ -135,7 +136,7 @@ void TypeAnalyzer::AnalyzeUnaryExpression(AST::UnaryExpression& expr)
             }
             else 
             {
-                IO::AddError({ filename, 0, "Cannot perform logical NOT on non-boolean type " + expr.operand.GetType().base + "."} );
+                IO::AddError({ filename, 0, "Cannot perform logical operations on non-boolean type " + expr.operand.GetType().base + "."} );
             }      
         break;
         case AST::address:
@@ -222,7 +223,6 @@ void TypeAnalyzer::AnalyzeExpression(AST::Expression& expr)
 void TypeAnalyzer::CheckAssignment(AST::AssignmentStatement& assignment)
 {
     AnalyzeExpression(assignment.value);
-
 
 }
 void TypeAnalyzer::CheckVariableDefinition(AST::VariableDefinition& definition)
