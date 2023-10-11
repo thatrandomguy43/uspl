@@ -52,33 +52,36 @@ class ReturnStatement;
 class IfStatement;
 class WhileLoop;
 class Declaration;
+class Type;
 
-//shit i noticed i dont have a way to print qualified type names
-class QualifiedType
+class Type
 {
     public:
     std::string base;
     bool is_const = false;
+    bool is_function = false;
     int8_t level_of_indirection = 0;
-    std::optional<std::vector<Declaration>> parameters;
+    std::vector<Declaration> parameters = {};
 };
+
+
 class LiteralExpression
 {
     public:
     std::variant<std::nullopt_t, bool, uint64_t, double, char, std::string> value;
-    QualifiedType type;
+    Type type;
 };
 class Expression
 {
     public:
     std::unique_ptr<std::variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression, FunctionCallExpression>> value;
-    QualifiedType GetType() const;
+    Type GetType() const;
 };
 class SymbolNameExpression
 {
     public:
     std::string name;
-    QualifiedType type;
+    Type type;
 
 };
 
@@ -88,21 +91,21 @@ class BinaryExpression
     Expression left_operand;
     Expression right_operand;
     BinaryOpType operation;
-    QualifiedType type;
+    Type type;
 };
 class UnaryExpression
 {
     public:
     Expression operand;
     UnaryOpType operation;
-    QualifiedType type;
+    Type type;
 };
 class FunctionCallExpression
 {
     public:
     std::string identifier;
     std::vector<Expression> args;
-    QualifiedType type;
+    Type type;
 };
 using Statement = std::unique_ptr<std::variant<BlockStatement, ReturnStatement, IfStatement, WhileLoop, AssignmentStatement, FunctionCallExpression, VariableDefinition, FunctionDefinition>>;
 class AssignmentStatement
@@ -136,7 +139,7 @@ class WhileLoop
 class Declaration
 {
     public:
-    QualifiedType type;
+    Type type;
     std::string name;
 };
 class VariableDefinition
@@ -165,7 +168,7 @@ std::string filename;
 std::vector<Token> tokens;
 size_t token_index;
 
-AST::QualifiedType MakeQualifiedType();
+AST::Type MakeType();
 AST::FunctionCallExpression MakeFunctionCallExpression();
 AST::BinaryExpression MakeBinaryExpression();
 AST::UnaryExpression MakeUnaryExpression();

@@ -3,40 +3,44 @@
 
 using namespace std;
 
-//this whole solution is rather bad, i will probably need some more practical way to define conversions
-bool TypeAnalyzer::IsTypeConvertable(const AST::QualifiedType& to, const AST::QualifiedType& from) const
+const multimap<AST::Type, AST::Type> BUILTIN_CONVERSIONS
 {
-    const set<string> INTEGER_TYPES = {
-        "int8",
-        "int16",
-        "int32",
-        "int64",
-    };
-    const set<string> FLOAT_TYPES = {
-        "float32",
-        "float64",
-    };
-    if (to.level_of_indirection == 0 and from.level_of_indirection == 0)
-    {
-        if (INTEGER_TYPES.contains(from.base))
-        {
-            if (INTEGER_TYPES.contains(to.base)) 
-            {
-                return true;
-            }
-            else if (FLOAT_TYPES.contains(to.base))
-            {
-                return true;
-            }
-        }
-    }
+    {{"int8"}, {"int16"}},
+    {{"int8"}, {"int32"}},
+    {{"int8"}, {"int64"}},
+    {{"int16"}, {"int8"}},
+    {{"int16"}, {"int32"}},
+    {{"int16"}, {"int64"}},
+    {{"int32"}, {"int8"}},
+    {{"int32"}, {"int16"}},
+    {{"int32"}, {"int64"}},
+    {{"int64"}, {"int8"}},
+    {{"int64"}, {"int16"}},
+    {{"int64"}, {"int32"}},
+
+    {{"float32"}, {"int8"}},
+    {{"float32"}, {"int16"}},
+    {{"float32"}, {"int32"}},
+    {{"float32"}, {"int64"}},
+    {{"float64"}, {"int8"}},
+    {{"float64"}, {"int16"}},
+    {{"float64"}, {"int32"}},
+    {{"float64"}, {"int64"}},
+
+};
+
+//this whole solution is rather bad, i will probably need some more practical way to define conversions
+bool TypeAnalyzer::IsTypeConvertable(const AST::Type& to, const AST::Type& from) const
+{
+
+   
     //i dont really want default conversions to bool, people can be tripped up by truthy/falsy easily
     return false;
 }
 
-optional<AST::QualifiedType> TypeAnalyzer::FindTypeOfSymbol(const string& symbol) const
+optional<AST::Type> TypeAnalyzer::FindTypeOfSymbol(const string& symbol) const
 {
-    optional<AST::QualifiedType> type;
+    optional<AST::Type> type;
     const AST::BlockStatement* block = global_scope;
     for (size_t block_idx = 0; block_idx < scope.size(); block_idx++)
     {
@@ -59,7 +63,6 @@ optional<AST::QualifiedType> TypeAnalyzer::FindTypeOfSymbol(const string& symbol
 
     return type;
 }
-
 void TypeAnalyzer::AnalyzeSymbolNameExpression(AST::SymbolNameExpression& expr)
 {
 

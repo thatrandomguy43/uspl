@@ -1,8 +1,6 @@
 #pragma once
 #include "ASTBuilder.hpp"
-#include <unordered_map>
-
-
+#include <utility>
 
 class TypeAnalyzer
 {
@@ -23,8 +21,8 @@ class TypeAnalyzer
     second statement in global scope, second statement within that block, third statement in that block
     */
     std::vector<uint16_t> scope;
-    bool IsTypeConvertable(const AST::QualifiedType&, const AST::QualifiedType&) const;
-    std::optional<AST::QualifiedType> FindTypeOfSymbol(const std::string&) const;
+    bool IsTypeConvertable(const AST::Type&, const AST::Type&) const;
+    std::optional<AST::Type> FindTypeOfSymbol(const std::string&) const;
     void AnalyzeSymbolNameExpression(AST::SymbolNameExpression&);
     void AnalyzeLiteralExpression(AST::LiteralExpression&);
     void AnalyzeUnaryExpression(AST::UnaryExpression&);

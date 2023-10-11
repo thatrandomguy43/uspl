@@ -95,4 +95,8 @@ functiondef := type `(`[type Name {`,` type Name}]`)` Name block
 file := {vardef | functiondef | externdecl}
 this crap is a lot already, a lot of stuff refering to shit thats not gonna be supported for a while
 
-i
+i have been dealing with this for a whil now, but have not written it down yet
+how do i do type conversion? which conversions between fundamental types should be allowed?
+how does the user define their own conversions?
+which also leads into operator overloading, or at least something like it
+but i really do not think i can accomodate it, its too damn hard to deal with on top of everything else

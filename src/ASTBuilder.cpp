@@ -37,7 +37,7 @@ const map<TokenType, BinaryOpType> BINARY_OPERATORS
     {operator_greater_or_equal, greaterthan_equals}
 };
 
-QualifiedType Expression::GetType() const
+Type Expression::GetType() const
 {
     switch (value->index()) 
     {
@@ -60,9 +60,9 @@ QualifiedType Expression::GetType() const
     return {};
 }
 
-QualifiedType ASTBuilder::MakeQualifiedType()
+Type ASTBuilder::MakeType()
 {
-    QualifiedType type;
+    Type type;
     bool is_function_type = false;
     if (tokens[token_index].type == keyword_function)
     {
@@ -111,13 +111,12 @@ QualifiedType ASTBuilder::MakeQualifiedType()
         return type;
     }
     token_index++;
-    type.parameters = vector<Declaration>{};
     while (token_index < tokens.size() and tokens[token_index].type != close_parentheses)
     {
-        type.parameters.value().push_back({MakeQualifiedType(), ""});
+        type.parameters.push_back(AST::Declaration{MakeType(), ""});
         if (tokens[token_index].type == identifier)
         {
-            type.parameters.value().back().name = get<string>(tokens[token_index].contents);
+            type.parameters.back().name = get<string>(tokens[token_index].contents);
             token_index++;
         }
     if (tokens[token_index].type != seperator and tokens[token_index].type != close_parentheses)
@@ -449,7 +448,7 @@ AssignmentStatement ASTBuilder::MakeAssignmentStatement()
 Declaration ASTBuilder::MakeDeclaration()
 {
     Declaration declaration;
-    declaration.type = MakeQualifiedType();
+    declaration.type = MakeType();
     if (token_index >= tokens.size() or tokens[token_index].type != identifier)
     {
         IO::AddError({filename, tokens[token_index].file_position, "Expected name after type."});
