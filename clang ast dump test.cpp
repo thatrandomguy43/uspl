@@ -1,7 +1,10 @@
-
+#include <unordered_map>
 #include <typeinfo>
+class xyz{
+    std::unordered_map<int, xyz> abc;
+};
 int main(int argc, char**)
 {
-    const std::type_info& x = typeid([](double x){return x*x;});
+    xyz AAAAA;
     return 0;
 }

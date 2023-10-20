@@ -4,141 +4,96 @@
 using namespace AST;
 using namespace std;
 
-using ExprValue = variant<SymbolNameExpression, LiteralExpression, UnaryExpression, BinaryExpression, FunctionCallExpression>;
-using StatValue = variant<BlockStatement, ReturnStatement, IfStatement, WhileLoop, AssignmentStatement, FunctionCallExpression, VariableDefinition, FunctionDefinition>;
 
-const map<TokenType, UnaryOpType> UNARY_OPERATORS
+const map<TokenType, string> UNARY_OPERATORS
 {
-   {operator_bitwise_not, AST::bit_not},
-   {operator_logical_not, logic_not},
-   {operator_pointer, dereference},
-   {operator_address, address},
-   {operator_subtraction, AST::negation}
+   {operator_bitwise_not, "bit_not"},
+   {operator_logical_not, "logic_not"},
+   {operator_pointer, "dereference"},
+   {operator_address, "address"},
+   {operator_subtraction, "negation"}
 };
-const map<TokenType, BinaryOpType> BINARY_OPERATORS
+const map<TokenType, string> BINARY_OPERATORS
 {
-    {operator_addition, addition},
-    {operator_subtraction, subtraction},
-    {operator_multiplication, multiplication},
-    {operator_division, division},
-    {operator_modulo, modulo},
-    {operator_bitwise_and, AST::bit_and},
-    {operator_bitwise_or, AST::bit_or},
-    {operator_bitwise_xor, AST::bit_xor},
-    {operator_shift_left, bitshift_left},
-    {operator_shift_right, bitshift_right},
-    {operator_logical_and, logic_and},
-    {operator_logical_or, logic_or},
-    {operator_equality, equals},
-    {operator_inequality, notequals},
-    {operator_lessthan, lessthan},
-    {operator_greaterthan, greaterthan},
-    {operator_less_or_equal, lessthan_equals},
-    {operator_greater_or_equal, greaterthan_equals}
+    {operator_addition, "addition"},
+    {operator_subtraction, "subtraction"},
+    {operator_multiplication, "multiplication"},
+    {operator_division, "division"},
+    {operator_modulo, "modulo"},
+    {operator_bitwise_and, "bit_and"},
+    {operator_bitwise_or, "bit_or"},
+    {operator_bitwise_xor, "bit_xor"},
+    {operator_shift_left, "bitshift_left"},
+    {operator_shift_right, "bitshift_right"},
+    {operator_logical_and, "logic_and"},
+    {operator_logical_or, "logic_or"},
+    {operator_equality, "equals"},
+    {operator_inequality, "notequals"},
+    {operator_lessthan, "lessthan"},
+    {operator_greaterthan, "greaterthan"},
+    {operator_less_or_equal, "lessthan_equals"},
+    {operator_greater_or_equal, "greaterthan_equals"}
 };
 
-bool Type::operator==(const Type& other) const
-{
-    bool simple_equality = base == other.base and is_function == other.is_function and level_of_indirection == other.level_of_indirection and parameters.size() == other.parameters.size();
-    if (not simple_equality)
-        return false;
-    for (int param = 0; param < parameters.size(); param++)
-        if (*parameters[param] != *other.parameters[param])
-            return false;
-    return true;
-}
 
-Type Expression::GetType() const
-{
-    switch (value->index()) 
-    {
-        case 0:
-            return get<AST::SymbolNameExpression>(*value).type;
-        break;
-        case 1:
-            return get<AST::LiteralExpression>(*value).type;
-        break;
-        case 2:
-            return get<AST::LiteralExpression>(*value).type;
-        break;
-        case 3:
-            return get<AST::BinaryExpression>(*value).type;
-        break;
-        case 4:
-            return get<AST::FunctionCallExpression>(*value).type;
-        break;
-    }
-    return {};
-}
 
-Type ASTBuilder::MakeType(optional<vector<Declaration>*> funcdef_parameter_declarations = nullopt)
+Node Builder::MakeType()
 {
-    Type type;
-    bool is_function_type = false;
-    if (tokens[token_index].type == keyword_function)
-    {
-        is_function_type = true;
-        token_index++;
-    }
+    Node type;
+    type.id = "Type";
+    type.properties["category"] = "basic";
     if (token_index >= tokens.size())
     {
         IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file during type."});
         return type;
     }
-    type.is_const = true ? tokens[token_index].type == keyword_const : false;
-    if (not type.is_const and tokens[token_index].type != keyword_var)
+    if (tokens[token_index].type == keyword_function)
     {
-        IO::AddError({filename, tokens[token_index].file_position, "Mutablility must be specified with either 'var' or 'const' (mostly to make it easier to parse)."});
-    }
-    else token_index++;
-    if (token_index >= tokens.size() or tokens[token_index].type != identifier)
-    {
-        IO::AddError({filename, tokens[token_index].file_position, "Expected type name here."});
-        return type;
-    } 
-    else 
-    {
-        type.base = get<string>(tokens[token_index].contents);
-    }
-    token_index++;
-    while (tokens[token_index].type == operator_pointer)
-    {
-        type.level_of_indirection++;
+        type.properties["category"] = "function";
         token_index++;
+        if (token_index >= tokens.size())
+        {
+            IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file during type."});
+            return type;
+        }
     }
-    if (not is_function_type)
-        return type;
-
-
-
-    if (token_index >= tokens.size())
+    else
     {
-        IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file during function type."});
-        return type;
+        type.properties["is_const"] = true ? tokens[token_index].type == keyword_const : false;
+        if (tokens[token_index].type != keyword_var and tokens[token_index].type != keyword_const) 
+        {
+            IO::AddError({filename, tokens[token_index].file_position, "Must specity mustability with 'var' or 'const'. (this is pretty dumb for function return types but techinical difficulties apply)"});
+
+        }
+        else
+            token_index++;
+    
+        if (tokens[token_index].type == operator_pointer)
+        {
+            type.properties["category"] = "pointer";
+            token_index++;
+            type.properties["pointed_to_type"] = MakeType();
+        } 
+        else if (tokens[token_index].type == identifier) 
+        {
+            type.properties["base"] = get<string>(tokens[token_index].contents);
+        }
+        else
+        {
+            IO::AddError({filename, tokens[token_index].file_position, "Expected type name here."});
+        }
     }
-    if (tokens[token_index].type != open_parentheses)
-    {
-        IO::AddError({filename, tokens[token_index].file_position, "Expected '(' to begin parameter list."});
-        return type;
-    }
-    token_index++;
-    while (token_index < tokens.size() and tokens[token_index].type != close_parentheses)
-    {
-        type.parameters.push_back(make_unique<AST::Type>(MakeType()));
-    if (tokens[token_index].type != seperator and tokens[token_index].type != close_parentheses)
-        IO::AddError({filename, tokens[token_index].file_position, "Expected ',' between function parameters."});
-    else if (tokens[token_index].type == seperator) token_index++;
-    }
-    token_index++;
+    
     return type;
 }
 
-FunctionCallExpression ASTBuilder::MakeFunctionCallExpression()
+Node Builder::MakeFunctionCallExpression()
 {
-    FunctionCallExpression expr;
+    Node expr;
+    expr.id = "FunctionCall"
     if (tokens[token_index].type == identifier)
     {
-        expr.identifier = get<string>(tokens[token_index].contents);
+        expr.properties["identifier"] = get<string>(tokens[token_index].contents);
     } 
     else 
     {
@@ -166,13 +121,14 @@ FunctionCallExpression ASTBuilder::MakeFunctionCallExpression()
     return expr;
 }
 
-BinaryExpression ASTBuilder::MakeBinaryExpression()
+Node Builder::MakeBinaryExpression()
 {
-    BinaryExpression expr;
+    Node expr;
+    expr.id = "BinaryExpression";
     if (tokens[token_index].type == open_parentheses)
     {
         token_index++;
-        expr.left_operand = MakeExpression();
+        expr.properties["left_operand"] = MakeExpression();
         if (token_index >= tokens.size() or tokens[token_index].type != close_parentheses)
         {
             IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' to close expression."});
@@ -182,21 +138,14 @@ BinaryExpression ASTBuilder::MakeBinaryExpression()
     } 
     else 
     {
-        auto simple_expr = MakeSimpleExpression();
-        if (simple_expr.index() == 0)
-        {
-            expr.left_operand.value = make_unique<ExprValue>(get<SymbolNameExpression>(simple_expr));
-        }
-        else {
-            expr.left_operand.value = make_unique<ExprValue>(get<LiteralExpression>(simple_expr));
-        }
+        expr.properties["left_operand"] = MakeSimpleExpression();
     }
-    expr.operation = BINARY_OPERATORS.at(tokens[token_index].type);
+    expr.properties["operation"] = BINARY_OPERATORS.at(tokens[token_index].type);
     token_index++;
     if (tokens[token_index].type == open_parentheses)
     {
         token_index++;
-        expr.right_operand = MakeExpression();
+        expr.properties["right_operand"] = MakeExpression();
         if (token_index >= tokens.size() or tokens[token_index].type != close_parentheses)
         {
             IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' to close expression."});
@@ -206,60 +155,48 @@ BinaryExpression ASTBuilder::MakeBinaryExpression()
     } 
     else 
     {
-        auto simple_expr = MakeSimpleExpression();
-        if (simple_expr.index() == 0)
-        {
-            expr.right_operand.value = make_unique<ExprValue>(get<SymbolNameExpression>(simple_expr));
-        }
-        else {
-            expr.right_operand.value = make_unique<ExprValue>(get<LiteralExpression>(simple_expr));
-        }
+        expr.properties["right_operand"] = MakeSimpleExpression();
     }
     return expr;
 }
-UnaryExpression ASTBuilder::MakeUnaryExpression()
+Node Builder::MakeUnaryExpression()
 {
-    UnaryExpression expr;
-    expr.operation = UNARY_OPERATORS.at(tokens[token_index].type);
+    Node expr;
+    expr.id = "UnaryExpression";
+    expr.properties["operation"] = BINARY_OPERATORS.at(tokens[token_index].type);
     token_index++;
     if (tokens[token_index].type == open_parentheses)
     {
         token_index++;
-        expr.operand = MakeExpression();
-        if (tokens[token_index].type != close_parentheses)
+        expr.properties["operand"] = MakeExpression();
+        if (token_index >= tokens.size() or tokens[token_index].type != close_parentheses)
         {
             IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' to close expression."});
+            return expr;
         }
         token_index++;
     } 
     else 
     {
-        auto simple_expr = MakeSimpleExpression();
-        if (simple_expr.index() == 0)
-        {
-            expr.operand.value = make_unique<ExprValue>(get<SymbolNameExpression>(simple_expr));
-        }
-        else {
-            expr.operand.value = make_unique<ExprValue>(get<LiteralExpression>(simple_expr));
-        }
+        expr.properties["operand"] = MakeSimpleExpression();
     }
     return expr;
 }
 
-variant<SymbolNameExpression, LiteralExpression> ASTBuilder::MakeSimpleExpression()
+Node Builder::MakeSimpleExpression()
 {
-    variant<SymbolNameExpression, LiteralExpression> expr;
+    Node expr;
 
     if (tokens[token_index].type == identifier)
     {
-        expr = SymbolNameExpression{};
-        get<SymbolNameExpression>(expr).name = get<string>(tokens[token_index].contents);
+        expr.id = "SymbolNameExpression";
+        expr.properties["identifier"] = get<string>(tokens[token_index].contents);
         token_index++;
     } 
     else if (tokens[token_index].type == literal_value)
     {
-        expr = LiteralExpression{nullopt};
-        get<LiteralExpression>(expr).value = tokens[token_index].contents;
+        expr.id = "LiteralExpression";
+        expr.properties["value"] = tokens[token_index].contents;
         token_index++;
     }
     else
@@ -270,9 +207,9 @@ variant<SymbolNameExpression, LiteralExpression> ASTBuilder::MakeSimpleExpressio
     return expr;
 }
 
-Expression ASTBuilder::MakeExpression()
+Node Builder::MakeExpression()
 {
-    Expression expr;
+    Node expr;
 
     if (token_index >= tokens.size())
     {
@@ -338,9 +275,9 @@ Expression ASTBuilder::MakeExpression()
     return expr;
 }
 
-BlockStatement ASTBuilder::MakeBlockStatement()
+Node Builder::MakeBlockStatement()
 {
-    BlockStatement block;
+    Node block;
     if (tokens[token_index].type == keyword_do)
     {
         token_index++;
@@ -409,36 +346,39 @@ BlockStatement ASTBuilder::MakeBlockStatement()
     return block;
 }
 
-ReturnStatement ASTBuilder::MakeReturnStatement()
+Node Builder::MakeReturnStatement()
 {
-    ReturnStatement statement;
+    Node statement;
+    statement.id = "ReturnStatement";
     token_index++;
-    statement.value = MakeExpression();
+    statement.properties["value"] = MakeExpression();
     return statement;
 }
 
-WhileLoop ASTBuilder::MakeWhileLoop()
+Node Builder::MakeWhileLoop()
 {
-    WhileLoop loop;
+    Node loop;
+    statement.id = "WhileLoop";
     token_index++;
-    loop.condition = MakeExpression();
-    loop.content = MakeBlockStatement();
+    loop.properties["condition"] = MakeExpression();
+    loop.properties["content"] = MakeBlockStatement();
     return loop;
 }
 
 
-IfStatement ASTBuilder::MakeIfStatement()
+Node Builder::MakeWhileLoop()
 {
-    IfStatement statement;
+    Node loop;
+    statement.id = "IfStatement";
     token_index++;
-    statement.condition = MakeExpression();
-    statement.content = MakeBlockStatement();
-    return statement;
+    loop.properties["condition"] = MakeExpression();
+    loop.properties["content"] = MakeBlockStatement();
+    return loop;
 }
 
-AssignmentStatement ASTBuilder::MakeAssignmentStatement()
+Node Builder::MakeAssignmentStatement()
 {
-    AssignmentStatement statement;
+    Node statement;
 
     statement.target_name = get<string>(tokens[token_index].contents);
     //if we're in this function, we can be sure there was an =, so we dont need to test for it
@@ -451,9 +391,9 @@ AssignmentStatement ASTBuilder::MakeAssignmentStatement()
     return statement;
 }
 
-Declaration ASTBuilder::MakeDeclaration()
+Node Builder::MakeDeclaration()
 {
-    Declaration declaration;
+    Node declaration;
     declaration.type = MakeType();
     if (token_index >= tokens.size() or tokens[token_index].type != identifier)
     {
@@ -468,9 +408,9 @@ Declaration ASTBuilder::MakeDeclaration()
     return declaration;
 }
 
-VariableDefinition ASTBuilder::MakeVariableDefinition()
+Node Builder::MakeVariableDefinition()
 {
-    VariableDefinition definition;
+    Node definition;
 
     definition.declaration = MakeDeclaration();
     if (token_index >= tokens.size() or tokens[token_index].type != operator_assignment)
@@ -488,9 +428,9 @@ VariableDefinition ASTBuilder::MakeVariableDefinition()
     definition.value = MakeExpression();
     return definition;
 }
-FunctionDefinition ASTBuilder::MakeFunctionDefinition()
+Node Builder::MakeFunctionDefinition()
 {
-    FunctionDefinition definition;
+    Node definition;
     
     definition.declation = MakeDeclaration();
 
@@ -505,7 +445,7 @@ FunctionDefinition ASTBuilder::MakeFunctionDefinition()
     return definition;
 }
 
-void ASTBuilder::BuildFile(TranslationUnit& root, const std::vector<Token>& token_source, const std::string& source_filename)
+void Builder::BuildFile(Node& root, const std::vector<Token>& token_source, const std::string& source_filename)
 {
     token_index = 0;
     tokens = token_source;

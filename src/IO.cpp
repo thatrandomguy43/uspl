@@ -135,7 +135,7 @@ int main(int argc, const char** argv)
         return 2;
     }
 
-    ASTBuilder builder;
+    AST::Builder builder;
     for (auto& file : files)
     {
         builder.BuildFile(file.tree, file.tokens, file.name);

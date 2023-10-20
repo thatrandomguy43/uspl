@@ -42,7 +42,7 @@ const map<string, TokenType> SYMBOL_TOKEN_IDS
     {"#",reserved_hash},
     {"!",reserved_exclamation},
     {"?",reserved_questionmark},
-    {":",reserved_colon},
+    {":",parameter_list_indicator},
     {";",reserved_semicolon},
     
 };

@@ -25,6 +25,9 @@ the keywords and, or and not are used for boolean logic instead of operators
 i think i'm gonna have to do oops all parentheses for binary operators so 3 * 4 + 2 must be (3 * 4) + 2
 not doing that would mean i have to deal with operator presidence and introduce behaviour that is hard to program and easy to misunderstand 
 
+another new syntax change for the sake of programming ease! function parameter names are decalred after the function type like this
+
+function var int32(const int32, const char$$) main :argc, argv:
 
 if statements look like:
 
@@ -73,27 +76,15 @@ i just have regular ptrs be 1 length arrays, and have syntax shorthand of $p = p
 i'm still gonna leave references out until later, they are not really neccesary and complicate things for me
 multi layer ptrs and arrays can exist at once like this!
 
-for self
+i saw something else and thought of a good way to represent var/const with multilayer pointers
+you put the $ in fromnt instead so 
+var$ const char = const char*
+const$ var$ const int32 = const int** const 
+var$ const$ const$ var float64 = double * const * const *
 
-literal := LiteralInt | LiteralFloat | LiteralChar | LiteralString | LiteralBool
-expr := simplexpr | complexpr
-simplexpr := literal | Name
-complexpr := (simplexpr | `(` complexpr `)`) binop (simplexpr | `(` complexpr `)`) | unop (simplexpr | `(` complexpr `)`) | functioncall 
-binop := `and` | `or` | `+` | `-` | `*` | `/` | `%` | `==`| `~=`| `<=`| `>=` | `<` | `>` | `&`| `|` | `^` | `<<` | `>>`
-unop ::=  `-` | `not` | `~` | `$` | `@`
-functioncall := Name `(`[ expr {`,` expr}]`)`
-reference := Name | reference `.` Name | pointerderef
-stat := assignment | vardef | functiondef | externaldecl | functioncall | blockstat | returnstat | breakstat
-block := `do` {stat} `end`
-blockstat := ifstat | whilestat | forstat | block
-ifstat := `if` expr block {`else if` expr block} [`else` block]
-whilestat := `while` expr block
-assignment := reference `=` expr
-type := TypeName{ `$` }
-vardef := (`var` | `const`) type Name `=` expr
-functiondef := type `(`[type Name {`,` type Name}]`)` Name block
-file := {vardef | functiondef | externdecl}
-this crap is a lot already, a lot of stuff refering to shit thats not gonna be supported for a while
+this makes sense when read out, like the last one is "a variable pointer to a constant pointer to a constant pointer to a float64
+
+
 
 i have been dealing with this for a whil now, but have not written it down yet
 how do i do type conversion? which conversions between fundamental types should be allowed?

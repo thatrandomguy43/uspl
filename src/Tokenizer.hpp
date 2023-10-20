@@ -71,11 +71,11 @@ enum TokenType
     close_brace,
 
     seperator,
+    parameter_list_indicator,
 
     reserved_hash,
     reserved_exclamation,
     reserved_questionmark,
-    reserved_colon,
     reserved_semicolon,
 
     error_token
