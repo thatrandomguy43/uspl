@@ -37,6 +37,17 @@ const map<TokenType, BinaryOpType> BINARY_OPERATORS
     {operator_greater_or_equal, greaterthan_equals}
 };
 
+bool Type::operator==(const Type& other) const
+{
+    bool simple_equality = base == other.base and is_function == other.is_function and level_of_indirection == other.level_of_indirection and parameters.size() == other.parameters.size();
+    if (not simple_equality)
+        return false;
+    for (int param = 0; param < parameters.size(); param++)
+        if (*parameters[param] != *other.parameters[param])
+            return false;
+    return true;
+}
+
 Type Expression::GetType() const
 {
     switch (value->index()) 
@@ -60,7 +71,7 @@ Type Expression::GetType() const
     return {};
 }
 
-Type ASTBuilder::MakeType()
+Type ASTBuilder::MakeType(optional<vector<Declaration>*> funcdef_parameter_declarations = nullopt)
 {
     Type type;
     bool is_function_type = false;
@@ -113,12 +124,7 @@ Type ASTBuilder::MakeType()
     token_index++;
     while (token_index < tokens.size() and tokens[token_index].type != close_parentheses)
     {
-        type.parameters.push_back(AST::Declaration{MakeType(), ""});
-        if (tokens[token_index].type == identifier)
-        {
-            type.parameters.back().name = get<string>(tokens[token_index].contents);
-            token_index++;
-        }
+        type.parameters.push_back(make_unique<AST::Type>(MakeType()));
     if (tokens[token_index].type != seperator and tokens[token_index].type != close_parentheses)
         IO::AddError({filename, tokens[token_index].file_position, "Expected ',' between function parameters."});
     else if (tokens[token_index].type == seperator) token_index++;

@@ -61,7 +61,8 @@ class Type
     bool is_const = false;
     bool is_function = false;
     int8_t level_of_indirection = 0;
-    std::vector<Declaration> parameters = {};
+    std::vector<std::unique_ptr<Type>> parameters;
+    bool operator==(const Type&) const;
 };
 
 
@@ -152,6 +153,7 @@ class FunctionDefinition
 {
     public:
     Declaration declation;
+    std::vector<Declaration> parameters;
     BlockStatement body;
 };
 
@@ -168,7 +170,7 @@ std::string filename;
 std::vector<Token> tokens;
 size_t token_index;
 
-AST::Type MakeType();
+AST::Type MakeType(std::optional<std::vector<AST::Declaration>*> funcdef_parameter_declarations);
 AST::FunctionCallExpression MakeFunctionCallExpression();
 AST::BinaryExpression MakeBinaryExpression();
 AST::UnaryExpression MakeUnaryExpression();

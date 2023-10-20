@@ -33,7 +33,10 @@ const multimap<AST::Type, AST::Type> BUILTIN_CONVERSIONS
 bool TypeAnalyzer::IsTypeConvertable(const AST::Type& to, const AST::Type& from) const
 {
 
-   
+
+    if (find(BUILTIN_CONVERSIONS.begin(), BUILTIN_CONVERSIONS.end(), pair<AST::Type, AST::Type>{to, from}) != BUILTIN_CONVERSIONS.end())
+        return false;
+
     //i dont really want default conversions to bool, people can be tripped up by truthy/falsy easily
     return false;
 }
