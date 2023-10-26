@@ -90,7 +90,10 @@ Node Builder::MakeType()
 Node Builder::MakeFunctionCallExpression()
 {
     Node expr;
-    expr.id = "FunctionCall"
+    expr.id = "Expression";
+    expr.properties["expression_type"] = "function_call";
+    expr.properties["arguments"] = Node{"ExpressionList", {}};
+
     if (tokens[token_index].type == identifier)
     {
         expr.properties["identifier"] = get<string>(tokens[token_index].contents);
@@ -105,9 +108,10 @@ Node Builder::MakeFunctionCallExpression()
         cout << "Uhh, what? Why are we here if this token wasn't an opening parentheses? ASTBuilder::MakeFunctionCallExpression" << endl;
     }
     token_index++;
+    int16_t argument_idx = 0;
     while (tokens[token_index].type != close_parentheses) 
     {
-        expr.args.push_back(MakeExpression());
+        get<Node>(expr.properties["arguments"]).properties[argument_idx] = MakeExpression();
         if (tokens[token_index].type == seperator)
         {
             token_index++;
@@ -124,7 +128,8 @@ Node Builder::MakeFunctionCallExpression()
 Node Builder::MakeBinaryExpression()
 {
     Node expr;
-    expr.id = "BinaryExpression";
+    expr.id = "Expression";
+    expr.properties["expression_type"] = "binary";
     if (tokens[token_index].type == open_parentheses)
     {
         token_index++;
@@ -162,7 +167,8 @@ Node Builder::MakeBinaryExpression()
 Node Builder::MakeUnaryExpression()
 {
     Node expr;
-    expr.id = "UnaryExpression";
+    expr.id = "Expression";
+    expr.properties["expression_type"] = "unary";
     expr.properties["operation"] = BINARY_OPERATORS.at(tokens[token_index].type);
     token_index++;
     if (tokens[token_index].type == open_parentheses)
@@ -186,7 +192,8 @@ Node Builder::MakeUnaryExpression()
 Node Builder::MakeSimpleExpression()
 {
     Node expr;
-
+    expr.id = "Expression";
+    
     if (tokens[token_index].type == identifier)
     {
         expr.id = "SymbolNameExpression";
@@ -196,6 +203,10 @@ Node Builder::MakeSimpleExpression()
     else if (tokens[token_index].type == literal_value)
     {
         expr.id = "LiteralExpression";
+        switch (tokens[token_index].contents.index()) 
+        {
+            case 0:
+        }
         expr.properties["value"] = tokens[token_index].contents;
         token_index++;
     }
@@ -218,8 +229,7 @@ Node Builder::MakeExpression()
 
     if (UNARY_OPERATORS.contains(tokens[token_index].type))
     {
-        expr.value = make_unique<ExprValue>(MakeUnaryExpression());
-        return expr;
+        return MakeUnaryExpression();
     }
     size_t cursor = token_index;
     int16_t parentheses_level = 0;
@@ -255,22 +265,15 @@ Node Builder::MakeExpression()
     }
     if (BINARY_OPERATORS.contains(tokens[cursor].type)) 
     {
-        expr.value = make_unique<ExprValue>(MakeBinaryExpression());
+        return MakeBinaryExpression();
     } 
     else if (tokens[cursor].type == open_parentheses)
     {
-        expr.value = make_unique<ExprValue>(MakeFunctionCallExpression());
+        return MakeFunctionCallExpression();
     }
     else
     {
-        auto simple_expr = MakeSimpleExpression();
-        if (simple_expr.index() == 0)
-        {
-            expr.value = make_unique<ExprValue>(get<SymbolNameExpression>(simple_expr));
-        }
-        else {
-            expr.value = make_unique<ExprValue>(get<LiteralExpression>(simple_expr));
-        }
+       return MakeSimpleExpression();
     }
     return expr;
 }
