@@ -7,10 +7,10 @@ using namespace std;
 
 const map<TokenType, string> UNARY_OPERATORS
 {
-   {operator_bitwise_not, "bit_not"},
-   {operator_logical_not, "logic_not"},
+   {operator_bitwise_not, "bitwise_not"},
+   {operator_logical_not, "logical_not"},
    {operator_pointer, "dereference"},
-   {operator_address, "address"},
+   {operator_address, "addressof"},
    {operator_subtraction, "negation"}
 };
 const map<TokenType, string> BINARY_OPERATORS
@@ -20,13 +20,13 @@ const map<TokenType, string> BINARY_OPERATORS
     {operator_multiplication, "multiplication"},
     {operator_division, "division"},
     {operator_modulo, "modulo"},
-    {operator_bitwise_and, "bit_and"},
-    {operator_bitwise_or, "bit_or"},
-    {operator_bitwise_xor, "bit_xor"},
+    {operator_bitwise_and, "bitwise_and"},
+    {operator_bitwise_or, "bitwise_or"},
+    {operator_bitwise_xor, "bitwise_xor"},
     {operator_shift_left, "bitshift_left"},
     {operator_shift_right, "bitshift_right"},
-    {operator_logical_and, "logic_and"},
-    {operator_logical_or, "logic_or"},
+    {operator_logical_and, "logical_and"},
+    {operator_logical_or, "logical_or"},
     {operator_equality, "equals"},
     {operator_inequality, "notequals"},
     {operator_lessthan, "lessthan"},

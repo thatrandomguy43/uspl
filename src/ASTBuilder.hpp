@@ -18,6 +18,19 @@ class Node
     std::string id;
     std::unordered_map<std::variant<int64_t, std::string>, std::variant<bool,int64_t, double, std::string, Node>> properties;
 
+    static Node BuildBasicType(const std::string& type_name)
+    {
+        Node node;
+        node.id = "Type";
+        node.properties["is_const"] = false;
+        node.properties["category"] = "basic";
+        node.properties["base"] = type_name;
+        return node;
+    }
+    std::string StringifyType() const 
+    {
+        return "WHOOPS MISSING NAME LOUL";
+    }
 };
 
 class Builder    

@@ -3,31 +3,32 @@
 
 using namespace std;
 
-const multimap<string, string> NUMERIC_CONVERSIONS
+const multimap<AST::Node, AST::Node> NUMERIC_CONVERSIONS
 {
-    {"int8", "int16"},
-    {"int8", "int32"},
-    {"int8", "int64"},
-    {"int16", "int8"},
-    {"int16", "int32"},
-    {"int16", "int64"},
-    {"int32", "int8"},
-    {"int32", "int16"},
-    {"int32", "int64"},
-    {"int64", "int8"},
-    {"int64", "int16"},
-    {"int64", "int32"},
+    {AST::Node::BuildBasicType("int8"), AST::Node::BuildBasicType("int16")},
+    {AST::Node::BuildBasicType("int8"), AST::Node::BuildBasicType("int32")},
+    {AST::Node::BuildBasicType("int8"), AST::Node::BuildBasicType("int64")},
+    {AST::Node::BuildBasicType("int16"), AST::Node::BuildBasicType("int8")},
+    {AST::Node::BuildBasicType("int16"), AST::Node::BuildBasicType("int32")},
+    {AST::Node::BuildBasicType("int16"), AST::Node::BuildBasicType("int64")},
+    {AST::Node::BuildBasicType("int32"), AST::Node::BuildBasicType("int8")},
+    {AST::Node::BuildBasicType("int32"), AST::Node::BuildBasicType("int16")},
+    {AST::Node::BuildBasicType("int32"), AST::Node::BuildBasicType("int64")},
+    {AST::Node::BuildBasicType("int64"), AST::Node::BuildBasicType("int8")},
+    {AST::Node::BuildBasicType("int64"), AST::Node::BuildBasicType("int16")},
+    {AST::Node::BuildBasicType("int64"), AST::Node::BuildBasicType("int32")},
 
-    {"float32", "int8"},
-    {"float32", "int16"},
-    {"float32", "int32"},
-    {"float32", "int64"},
-    {"float64", "int8"},
-    {"float64", "int16"},
-    {"float64", "int32"},
-    {"float64", "int64"},
-
+    {AST::Node::BuildBasicType("float32"), AST::Node::BuildBasicType("int8")},
+    {AST::Node::BuildBasicType("float32"), AST::Node::BuildBasicType("int16")},
+    {AST::Node::BuildBasicType("float32"), AST::Node::BuildBasicType("int32")},
+    {AST::Node::BuildBasicType("float32"), AST::Node::BuildBasicType("int64")},
+    {AST::Node::BuildBasicType("float64"), AST::Node::BuildBasicType("int8")},
+    {AST::Node::BuildBasicType("float64"), AST::Node::BuildBasicType("int16")},
+    {AST::Node::BuildBasicType("float64"), AST::Node::BuildBasicType("int32")},
+    {AST::Node::BuildBasicType("float64"), AST::Node::BuildBasicType("int64")},
 };
+
+
 
 //this whole solution is rather bad, i will probably need some more practical way to define conversions
 bool TypeAnalyzer::IsTypeConvertable(const AST::Node& to, const AST::Node& from) const
@@ -64,18 +65,6 @@ optional<AST::Node> TypeAnalyzer::FindTypeOfSymbol(const string& symbol) const
 void TypeAnalyzer::AnalyzeSymbolNameExpression(AST::Node& expr)
 {
 
-    if (true) 
-    {
-
-    }
-    else if (true)
-    {
-        IO::AddError({ filename, 0, "'" + expr.name + "' is a function, and cannot be used as an expression on its own. Functions must be called to be an expression. (as it is in this currently function pointer-less language)"});
-    }
-    else 
-    {
-         IO::AddError({ filename, 0, "Use of undeclared identifier '" + expr.name + "'"});
-    }
 }
 
 void TypeAnalyzer::AnalyzeLiteralExpression(AST::Node& literal)
@@ -86,24 +75,26 @@ void TypeAnalyzer::AnalyzeLiteralExpression(AST::Node& literal)
     type.properties["is_const"] = false;
     if (get<string>(literal.properties["operation_type"]) == "literal_bool")
     {
-       type.properties["base"] = "bool";
+        type.properties["base"] = "bool";
     }
     else if (get<string>(literal.properties["operation_type"]) == "literal_integer")
     {
-       type.properties["base"] = "int64";
+        type.properties["base"] = "int64";
     }
     else if (get<string>(literal.properties["operation_type"]) == "literal_float")
     {
-       type.properties["base"] = "float64";
+        type.properties["base"] = "float64";
     }
     else if (get<string>(literal.properties["operation_type"]) == "literal_char")
     {
-       type.properties["base"] = "char";
+        type.properties["base"] = "char";
     }
     else if (get<string>(literal.properties["operation_type"]) == "literal_string")
     {
-       type.properties["category"] = "pointer";
-       type.properties["pointed_to_type"] = AST::Node{"Type", {{"category","basic"},{"base","char"}, {"is_const", true}}};
+        type.properties["category"] = "pointer";
+        AST::Node const_char = AST::Node::BuildBasicType("char");
+        const_char.properties["is_const"] = true;
+        type.properties["pointed_to_type"] = const_char;
     }
     
 }
@@ -111,62 +102,68 @@ void TypeAnalyzer::AnalyzeLiteralExpression(AST::Node& literal)
 void TypeAnalyzer::AnalyzeUnaryExpression(AST::Node& expr)
 {
     AnalyzeExpression(get<AST::Node>(expr.properties["operand"]));
-        if (expr.properties["operation"] == AST::negation)
+    const AST::Node& operand_type = get<AST::Node>(get<AST::Node>(expr.properties["operand"]).properties["type"]);
+    if (get<string>(expr.properties["operation"]) == "negation")
+    {
+        if (IsTypeConvertable(AST::Node::BuildBasicType("int64"), operand_type))
         {
-            if (IsTypeConvertable({{"int64"}}, expr.operand.GetType())) 
-            {
-                expr.type = {{"int64"}};
-            }
-            else if (IsTypeConvertable({{"float64"}}, expr.operand.GetType()))
-            {
-                expr.type = {{"float64"}};
-            }
-            else 
-            {
-                IO::AddError({ filename, 0, "Cannot perform negation on non-numerical type " + expr.operand.GetType().base + "."} );
-            }
+            expr.properties["type"] = AST::Node::BuildBasicType("int64");
         }
-        if (expr.properties["operation"] == AST::bit_not)
+        else if (IsTypeConvertable(AST::Node::BuildBasicType("float64"), operand_type))
         {
-            if (IsTypeConvertable({{"int64"}}, expr.operand.GetType())) 
-            {
-                expr.type = {{"int64"}};
-            }
-            else 
-            {
-                IO::AddError({ filename, 0, "Cannot perform bitwise operations on non-integer type " + expr.operand.GetType().base + "."} );
-            }
+            expr.properties["type"] = AST::Node::BuildBasicType("float64");
         }
-        if (expr.properties["operation"] == AST::logic_not)
-            if (IsTypeConvertable({{"bool"}}, expr.operand.GetType())) 
-            {
-                expr.type = {{"bool"}};
-            }
-            else 
-            {
-                IO::AddError({ filename, 0, "Cannot perform logical operations on non-boolean type " + expr.operand.GetType().base + "."} );
-            }      
-        if (expr.properties["operation"] == AST::address)
-            if (expr.operand.value->index() == 0)
-            {
-                expr.type = expr.operand.GetType();
-                expr.type.level_of_indirection++;
-            }
-            else 
-            {
-                IO::AddError({ filename, 0, "Can only get address of variables (lvalues), and not other types of expression (rvalues)."} );
-            }
-        if (expr.properties["operation"] == AST::dereference)
-            if (expr.operand.value->index() > 0)
-            {
-                expr.type = expr.operand.GetType();
-                expr.type.level_of_indirection--;
-            }
-            else 
-            {
-                IO::AddError({ filename, 0, "Cannot dereference non-pointer type " + expr.operand.GetType().base + "."} );
-            }
-        
+        else 
+        {
+            IO::AddError({ filename, 0, "Cannot perform negation on non-numerical type " + operand_type.StringifyType() + "."} );
+        }
+    }
+    else if (get<string>(expr.properties["operation"]) == "bitwise_not")
+    {
+        if (IsTypeConvertable({{"int64"}}, expr.operand.GetType())) 
+        {
+            expr.properties["type"] = AST::Node::BuildBasicType("int64");
+        }
+        else 
+        {
+            IO::AddError({ filename, 0, "Cannot perform bitwise operations on non-integer type " + expr.operand.GetType().base + "."} );
+        }
+    }
+    else if (get<string>(expr.properties["operation"]) == "logical_not")
+    {
+        if (IsTypeConvertable({{"bool"}}, expr.operand.GetType())) 
+        {
+            expr.properties["type"] = AST::Node::BuildBasicType("bool");
+        }
+        else 
+        {
+            IO::AddError({ filename, 0, "Cannot perform logical operations on non-boolean type " + expr.operand.GetType().base + "."} );
+        }
+    }
+    else if (get<string>(expr.properties["operation"]) == "addressof")
+    {
+        if (expr.operand.value->index() == 0)
+        {
+            expr.type = expr.operand.GetType();
+            expr.type.level_of_indirection++;
+        }
+        else 
+        {
+            IO::AddError({ filename, 0, "Can only get address of variables (lvalues), and not other types of expression (rvalues)."} );
+        }
+    }
+    else if (get<string>(expr.properties["operation"]) == AST::dereference)
+    {
+        if (expr.operand.value->index() > 0)
+        {
+            expr.type = expr.operand.GetType();
+            expr.type.level_of_indirection--;
+        }
+        else 
+        {
+            IO::AddError({ filename, 0, "Cannot dereference non-pointer type " + expr.operand.GetType().base + "."} );
+        }
+    }   
 }
 
 void TypeAnalyzer::AnalyzeBinaryExpression(AST::Node& expr)
@@ -180,14 +177,14 @@ void TypeAnalyzer::AnalyzeBinaryExpression(AST::Node& expr)
         case AST::division:
         case AST::modulo:
         break;
-        case AST::bit_and:
-        case AST::bit_or:
-        case AST::bit_xor:
+        case AST::bitwise_and:
+        case AST::bitwise_or:
+        case AST::bitwise_xor:
         case AST::bitshift_left:
         case AST::bitshift_right:
         break;
-        case AST::logic_and:
-        case AST::logic_or:
+        case AST::logical_and:
+        case AST::logical_or:
         break;
         case AST::equals:
         case AST::notequals:
