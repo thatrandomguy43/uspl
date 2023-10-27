@@ -37,7 +37,7 @@ Node MakeReturnStatement();
 Node MakeIfStatement();
 Node MakeWhileLoop();
 Node MakeAssignmentStatement();
-Node MakeDeclaration();
+Node MakeSymbolDeclaration();
 Node MakeVariableDefinition();
 Node MakeFunctionDefinition();
 public:

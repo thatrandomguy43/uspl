@@ -16,7 +16,7 @@ class CodeFile
     string name;
     string source_code;
     vector<Token> tokens;
-    TranslationUnit tree;
+    AST::Node tree;
     string IRFile;
 };
 

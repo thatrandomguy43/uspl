@@ -13,8 +13,7 @@ Built-in basic types
 | 64 bits | int64   | float64 | N/A       |
 
 bool and void also exist with their obvious C++ meanings.
-UPDATE: scrapped the wide chars, they add extra text encoding problems and make dealing with strings in the compiler more difficult
-i'm just gonna add utf8 shit in the std::string clone i'll make (if this project isn't dead by then ofc)
+
 
 
 
@@ -25,9 +24,7 @@ the keywords and, or and not are used for boolean logic instead of operators
 i think i'm gonna have to do oops all parentheses for binary operators so 3 * 4 + 2 must be (3 * 4) + 2
 not doing that would mean i have to deal with operator presidence and introduce behaviour that is hard to program and easy to misunderstand 
 
-another new syntax change for the sake of programming ease! function parameter names are decalred after the function type like this
 
-function var int32(const int32, const char$$) main :argc, argv:
 
 if statements look like:
 

@@ -268,7 +268,7 @@ Token Tokenizer::ProcessNumberLiteral()
     else 
     {
         double float_value = stod(text.substr(position, string::npos), &length);
-        optional<uint64_t> int_value = nullopt;
+        optional<int64_t> int_value = nullopt;
         try 
         {
             int_value = stoll(text.substr(position, string::npos));

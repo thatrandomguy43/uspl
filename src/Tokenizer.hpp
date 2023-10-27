@@ -86,7 +86,7 @@ enum TokenType
 class Token
 {
 
-using LiteralExpression = std::variant<std::nullopt_t, bool, uint64_t, double, char, std::string>;
+using LiteralExpression = std::variant<std::nullopt_t, bool, int64_t, double, char, std::string>;
 public:
 LiteralExpression contents;
 size_t length;

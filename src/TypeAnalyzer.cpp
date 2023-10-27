@@ -3,53 +3,47 @@
 
 using namespace std;
 
-const multimap<AST::Type, AST::Type> BUILTIN_CONVERSIONS
+const multimap<string, string> NUMERIC_CONVERSIONS
 {
-    {{"int8"}, {"int16"}},
-    {{"int8"}, {"int32"}},
-    {{"int8"}, {"int64"}},
-    {{"int16"}, {"int8"}},
-    {{"int16"}, {"int32"}},
-    {{"int16"}, {"int64"}},
-    {{"int32"}, {"int8"}},
-    {{"int32"}, {"int16"}},
-    {{"int32"}, {"int64"}},
-    {{"int64"}, {"int8"}},
-    {{"int64"}, {"int16"}},
-    {{"int64"}, {"int32"}},
+    {"int8", "int16"},
+    {"int8", "int32"},
+    {"int8", "int64"},
+    {"int16", "int8"},
+    {"int16", "int32"},
+    {"int16", "int64"},
+    {"int32", "int8"},
+    {"int32", "int16"},
+    {"int32", "int64"},
+    {"int64", "int8"},
+    {"int64", "int16"},
+    {"int64", "int32"},
 
-    {{"float32"}, {"int8"}},
-    {{"float32"}, {"int16"}},
-    {{"float32"}, {"int32"}},
-    {{"float32"}, {"int64"}},
-    {{"float64"}, {"int8"}},
-    {{"float64"}, {"int16"}},
-    {{"float64"}, {"int32"}},
-    {{"float64"}, {"int64"}},
+    {"float32", "int8"},
+    {"float32", "int16"},
+    {"float32", "int32"},
+    {"float32", "int64"},
+    {"float64", "int8"},
+    {"float64", "int16"},
+    {"float64", "int32"},
+    {"float64", "int64"},
 
 };
 
 //this whole solution is rather bad, i will probably need some more practical way to define conversions
-bool TypeAnalyzer::IsTypeConvertable(const AST::Type& to, const AST::Type& from) const
+bool TypeAnalyzer::IsTypeConvertable(const AST::Node& to, const AST::Node& from) const
 {
-
-
-    if (find(BUILTIN_CONVERSIONS.begin(), BUILTIN_CONVERSIONS.end(), pair<AST::Type, AST::Type>{to, from}) != BUILTIN_CONVERSIONS.end())
-        return false;
-
-    //i dont really want default conversions to bool, people can be tripped up by truthy/falsy easily
     return false;
 }
-
-optional<AST::Type> TypeAnalyzer::FindTypeOfSymbol(const string& symbol) const
+/*
+optional<AST::Node> TypeAnalyzer::FindTypeOfSymbol(const string& symbol) const
 {
-    optional<AST::Type> type;
-    const AST::BlockStatement* block = global_scope;
-    for (size_t block_idx = 0; block_idx < scope.size(); block_idx++)
+    optional<AST::Node> type;
+    const AST::Node* block = global_scope;
+    for (int block_idx = 0; block_idx < scope.size(); block_idx++)
     {
-        for (size_t statement_idx = 0; statement_idx < scope[block_idx]; statement_idx++)
+        for (int statement_idx = 0; statement_idx < scope[block_idx]; statement_idx++)
         {
-            if (block->statements[statement_idx]->index() == 6) 
+            if (block->properties[statement_idx]->index() == 6) 
             {
                 const AST::VariableDefinition& definition = get<AST::VariableDefinition>(*block->statements[statement_idx]);
                 if (definition.declaration.name == symbol)
@@ -66,7 +60,8 @@ optional<AST::Type> TypeAnalyzer::FindTypeOfSymbol(const string& symbol) const
 
     return type;
 }
-void TypeAnalyzer::AnalyzeSymbolNameExpression(AST::SymbolNameExpression& expr)
+*/
+void TypeAnalyzer::AnalyzeSymbolNameExpression(AST::Node& expr)
 {
 
     if (true) 
@@ -83,31 +78,37 @@ void TypeAnalyzer::AnalyzeSymbolNameExpression(AST::SymbolNameExpression& expr)
     }
 }
 
-void TypeAnalyzer::AnalyzeLiteralExpression(AST::LiteralExpression& literal)
+void TypeAnalyzer::AnalyzeLiteralExpression(AST::Node& literal)
 {
-    switch (literal.value.index()) 
+    AST::Node& type = get<AST::Node>(literal.properties["value_type"]);
+    type.id = "Type";
+    type.properties["category"] = "basic";
+    type.properties["is_const"] = false;
+    if (get<string>(literal.properties["operation_type"]) == "literal_bool")
     {
-        case 1:
-            literal.type.base = "bool";
-        break;
-        case 2:
-            literal.type.base = "int64";
-        break;
-        case 3:
-            literal.type.base = "float64";
-        break;
-        case 4:
-            literal.type.base = "char";
-        break;
-        case 5:
-            literal.type.base = "char";
-            literal.type.level_of_indirection = 1;
-            literal.type.is_const = true;
-        break;
+       type.properties["base"] = "bool";
     }
+    else if (get<string>(literal.properties["operation_type"]) == "literal_integer")
+    {
+       type.properties["base"] = "int64";
+    }
+    else if (get<string>(literal.properties["operation_type"]) == "literal_float")
+    {
+       type.properties["base"] = "float64";
+    }
+    else if (get<string>(literal.properties["operation_type"]) == "literal_char")
+    {
+       type.properties["base"] = "char";
+    }
+    else if (get<string>(literal.properties["operation_type"]) == "literal_string")
+    {
+       type.properties["category"] = "pointer";
+       type.properties["pointed_to_type"] = AST::Node{"Type", {{"category","basic"},{"base","char"}, {"is_const", true}}};
+    }
+    
 }
 
-void TypeAnalyzer::AnalyzeUnaryExpression(AST::UnaryExpression& expr)
+void TypeAnalyzer::AnalyzeUnaryExpression(AST::Node& expr)
 {
     AnalyzeExpression(expr.operand);
     switch (expr.operation) {
@@ -170,7 +171,7 @@ void TypeAnalyzer::AnalyzeUnaryExpression(AST::UnaryExpression& expr)
     }
 }
 
-void TypeAnalyzer::AnalyzeBinaryExpression(AST::BinaryExpression& expr)
+void TypeAnalyzer::AnalyzeBinaryExpression(AST::Node& expr)
 {
     AnalyzeExpression(expr.left_operand);
     AnalyzeExpression(expr.right_operand);
@@ -199,13 +200,13 @@ void TypeAnalyzer::AnalyzeBinaryExpression(AST::BinaryExpression& expr)
         break;
     }
 }
-void TypeAnalyzer::AnalyzeFunctionCall(AST::FunctionCallExpression& expr)
+void TypeAnalyzer::AnalyzeFunctionCall(AST::Node& expr)
 {
 
 }
 
 
-void TypeAnalyzer::AnalyzeExpression(AST::Expression& expr)
+void TypeAnalyzer::AnalyzeExpression(AST::Node& expr)
 {
     switch (expr.value->index()) {
             case 0:
@@ -226,19 +227,19 @@ void TypeAnalyzer::AnalyzeExpression(AST::Expression& expr)
         }
 }
 
-void TypeAnalyzer::CheckAssignment(AST::AssignmentStatement& assignment)
+void TypeAnalyzer::CheckAssignment(AST::Node& assignment)
 {
     AnalyzeExpression(assignment.value);
 
 }
-void TypeAnalyzer::CheckVariableDefinition(AST::VariableDefinition& definition)
+void TypeAnalyzer::CheckVariableDefinition(AST::Node& definition)
 {
     AnalyzeExpression(definition.value);
 
 
 }
 
-void TypeAnalyzer::AnalyzeStatement(AST::Statement& statement)
+void TypeAnalyzer::AnalyzeStatement(AST::Node& statement)
 {
     switch (statement->index()) {
             case 0:
@@ -270,12 +271,12 @@ void TypeAnalyzer::AnalyzeStatement(AST::Statement& statement)
         }
 }
 
-void TypeAnalyzer::AnalyzeFunctionDefinition(AST::FunctionDefinition& definition)
+void TypeAnalyzer::AnalyzeFunctionDefinition(AST::Node& definition)
 {
     AnalyzeBlock(definition.body);
 }
 
-void TypeAnalyzer::AnalyzeBlock(AST::BlockStatement& block)
+void TypeAnalyzer::AnalyzeBlock(AST::Node& block)
 {
     scope.push_back(0);
     for (; scope.back() < block.statements.size(); scope.back()++)
@@ -285,7 +286,7 @@ void TypeAnalyzer::AnalyzeBlock(AST::BlockStatement& block)
     scope.pop_back();
 }
 
-void TypeAnalyzer::AnalyzeTranslationUnit(TranslationUnit& unit)
+void TypeAnalyzer::AnalyzeTranslationUnit(AST::Node& unit)
 {
     global_scope = &unit.global_scope;
     AnalyzeBlock(unit.global_scope);

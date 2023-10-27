@@ -91,7 +91,7 @@ Node Builder::MakeFunctionCallExpression()
 {
     Node expr;
     expr.id = "Expression";
-    expr.properties["expression_type"] = "function_call";
+    expr.properties["operation_type"] = "function_call";
     expr.properties["arguments"] = Node{"ExpressionList", {}};
 
     if (tokens[token_index].type == identifier)
@@ -129,7 +129,7 @@ Node Builder::MakeBinaryExpression()
 {
     Node expr;
     expr.id = "Expression";
-    expr.properties["expression_type"] = "binary";
+    expr.properties["operation_type"] = "binary";
     if (tokens[token_index].type == open_parentheses)
     {
         token_index++;
@@ -168,7 +168,7 @@ Node Builder::MakeUnaryExpression()
 {
     Node expr;
     expr.id = "Expression";
-    expr.properties["expression_type"] = "unary";
+    expr.properties["operation_type"] = "unary";
     expr.properties["operation"] = BINARY_OPERATORS.at(tokens[token_index].type);
     token_index++;
     if (tokens[token_index].type == open_parentheses)
@@ -193,21 +193,37 @@ Node Builder::MakeSimpleExpression()
 {
     Node expr;
     expr.id = "Expression";
-    
     if (tokens[token_index].type == identifier)
     {
-        expr.id = "SymbolNameExpression";
+        expr.properties["operation_type"] = "symbol";
         expr.properties["identifier"] = get<string>(tokens[token_index].contents);
         token_index++;
     } 
     else if (tokens[token_index].type == literal_value)
-    {
-        expr.id = "LiteralExpression";
+    {   
         switch (tokens[token_index].contents.index()) 
         {
-            case 0:
+            case 1:
+                expr.properties["value"] = get<bool>(tokens[token_index].contents);
+                expr.properties["operation_type"] = "literal_bool";
+            break;
+            case 2:
+                expr.properties["value"] = get<int64_t>(tokens[token_index].contents);
+                expr.properties["operation_type"] = "literal_integer";
+            break;
+            case 3:
+                expr.properties["value"] = get<double>(tokens[token_index].contents);
+                expr.properties["operation_type"] = "literal_float";
+            break;
+            case 4:
+                expr.properties["value"] = string{get<char>(tokens[token_index].contents)};
+                expr.properties["operation_type"] = "literal_char";
+            break;
+            case 5:
+                expr.properties["value"] = get<string>(tokens[token_index].contents);
+                expr.properties["operation_type"] = "literal_string";
+            break;
         }
-        expr.properties["value"] = tokens[token_index].contents;
         token_index++;
     }
     else
@@ -281,6 +297,7 @@ Node Builder::MakeExpression()
 Node Builder::MakeBlockStatement()
 {
     Node block;
+    block.id = "BlockStatement";
     if (tokens[token_index].type == keyword_do)
     {
         token_index++;
@@ -289,8 +306,7 @@ Node Builder::MakeBlockStatement()
     {
         IO::AddError({filename, tokens[token_index].file_position, "Expected \'do\' to begin block statement."});
     }
-
-    while (tokens[token_index].type != keyword_end)
+    for (int statement_idx = 0; tokens[token_index].type != keyword_end; statement_idx++)
     {
         if (token_index >= tokens.size())
         {
@@ -301,8 +317,7 @@ Node Builder::MakeBlockStatement()
         {
             case keyword_var:                                                                                             
             case keyword_const:
-                block.statements.push_back({});
-                block.statements.back() = make_unique<StatValue>(MakeVariableDefinition());
+                block.properties[statement_idx] = MakeVariableDefinition();
             break;
             case keyword_function:
                 IO::AddError({filename, tokens[token_index].file_position, "Function definition inside function definition not allowed."});
@@ -313,11 +328,11 @@ Node Builder::MakeBlockStatement()
                 {
                     if (tokens[token_index + 1].type == open_parentheses)
                     {
-                        block.statements.push_back(make_unique<StatValue>(MakeFunctionCallExpression()));
+                       block.properties[statement_idx] = MakeFunctionCallExpression();
                     } 
                     else if (tokens[token_index + 1].type == operator_assignment)
                     {
-                        block.statements.push_back(make_unique<StatValue>(MakeAssignmentStatement()));
+                        block.properties[statement_idx] = MakeAssignmentStatement();
                     }
                     else
                     {
@@ -331,13 +346,13 @@ Node Builder::MakeBlockStatement()
                 }
             break;
             case keyword_if:
-                block.statements.push_back(make_unique<StatValue>(MakeIfStatement()));
+                block.properties[statement_idx] = MakeIfStatement();
             break;
             case keyword_while:
-                block.statements.push_back(make_unique<StatValue>(MakeWhileLoop()));
+                block.properties[statement_idx] = MakeWhileLoop();
             break;
             case keyword_return:
-                block.statements.push_back(make_unique<StatValue>(MakeReturnStatement()));
+                block.properties[statement_idx] = MakeReturnStatement();
             break;
             default:
                 IO::AddError({filename, tokens[token_index].file_position, "Keyword does not begin a valid statement."});
@@ -361,7 +376,7 @@ Node Builder::MakeReturnStatement()
 Node Builder::MakeWhileLoop()
 {
     Node loop;
-    statement.id = "WhileLoop";
+    loop.id = "WhileLoop";
     token_index++;
     loop.properties["condition"] = MakeExpression();
     loop.properties["content"] = MakeBlockStatement();
@@ -369,35 +384,36 @@ Node Builder::MakeWhileLoop()
 }
 
 
-Node Builder::MakeWhileLoop()
+Node Builder::MakeIfStatement()
 {
-    Node loop;
+    Node statement;
     statement.id = "IfStatement";
     token_index++;
-    loop.properties["condition"] = MakeExpression();
-    loop.properties["content"] = MakeBlockStatement();
-    return loop;
+    statement.properties["condition"] = MakeExpression();
+    statement.properties["content"] = MakeBlockStatement();
+    return statement;
 }
 
 Node Builder::MakeAssignmentStatement()
 {
     Node statement;
 
-    statement.target_name = get<string>(tokens[token_index].contents);
+    statement.properties["target"] = get<string>(tokens[token_index].contents);
     //if we're in this function, we can be sure there was an =, so we dont need to test for it
     token_index += 2;
     if (token_index >= tokens.size())
     {
         IO::AddError({filename, tokens.back().file_position, "Unexpected end of file in assignment."});
     }
-    statement.value = MakeExpression();
+    statement.properties["value"] = MakeExpression();
     return statement;
 }
 
-Node Builder::MakeDeclaration()
+Node Builder::MakeSymbolDeclaration()
 {
     Node declaration;
-    declaration.type = MakeType();
+    declaration.id = "SymbolDeclaration";
+    declaration.properties["type"] = MakeType();
     if (token_index >= tokens.size() or tokens[token_index].type != identifier)
     {
         IO::AddError({filename, tokens[token_index].file_position, "Expected name after type."});
@@ -405,7 +421,7 @@ Node Builder::MakeDeclaration()
     }
     else 
     {
-        declaration.name = get<string>(tokens[token_index].contents);
+        declaration.properties["name"] = get<string>(tokens[token_index].contents);
         token_index++;
     }
     return declaration;
@@ -414,8 +430,9 @@ Node Builder::MakeDeclaration()
 Node Builder::MakeVariableDefinition()
 {
     Node definition;
+    definition.id = "VariableDefinition";
 
-    definition.declaration = MakeDeclaration();
+    definition.properties["declaration"] = MakeSymbolDeclaration();
     if (token_index >= tokens.size() or tokens[token_index].type != operator_assignment)
     {
         IO::AddError({filename, tokens[token_index].file_position, "Expected assignment after variable name."});
@@ -428,14 +445,15 @@ Node Builder::MakeVariableDefinition()
         IO::AddError({filename, tokens.back().file_position, "Unexpected end of file inside variable definition."});
         return definition;
     }
-    definition.value = MakeExpression();
+    definition.properties["value"] = MakeExpression();
     return definition;
 }
 Node Builder::MakeFunctionDefinition()
 {
     Node definition;
+    definition.id = "FunctionDefinition";
     
-    definition.declation = MakeDeclaration();
+    definition.properties["declaration"] = MakeSymbolDeclaration();
 
     if (token_index >= tokens.size())
     {
@@ -443,7 +461,7 @@ Node Builder::MakeFunctionDefinition()
         return definition;
     }
 
-    definition.body = MakeBlockStatement();
+    definition.properties["body"] = MakeBlockStatement();
 
     return definition;
 }
@@ -453,22 +471,24 @@ void Builder::BuildFile(Node& root, const std::vector<Token>& token_source, cons
     token_index = 0;
     tokens = token_source;
     filename = source_filename;
+    int statement_idx = 0;
     while (token_index < tokens.size() and tokens[token_index].type != error_token)
     {
         switch (tokens[token_index].type) 
         {
             case keyword_var:                                                                                             
             case keyword_const:
-                root.global_scope.statements.push_back(make_unique<StatValue>(MakeVariableDefinition()));
+                root.properties[statement_idx] = MakeVariableDefinition();
             break;
             case keyword_function:
-                root.global_scope.statements.push_back(make_unique<StatValue>(MakeFunctionDefinition()));
+                root.properties[statement_idx] = MakeFunctionDefinition();
             break;
             default:
-            IO::AddError({filename, tokens[token_index].file_position, "Token not expected at file scope."});
+            IO::AddError({filename, tokens[token_index].file_position, "Expected symbol declaration (nothing else allowed outside a function)"});
             token_index++;
             break;
         }
+        statement_idx++;
     }
     return;
 }

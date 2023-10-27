@@ -1,10 +1,6 @@
-#include <unordered_map>
-#include <typeinfo>
-class xyz{
-    std::unordered_map<int, xyz> abc;
-};
-int main(int argc, char**)
+
+int main(int argc, char** argv)
 {
-    xyz AAAAA;
+    int x = (const int)5;
     return 0;
 }
