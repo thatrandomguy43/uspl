@@ -110,9 +110,9 @@ void TypeAnalyzer::AnalyzeLiteralExpression(AST::Node& literal)
 
 void TypeAnalyzer::AnalyzeUnaryExpression(AST::Node& expr)
 {
-    AnalyzeExpression(expr.operand);
-    switch (expr.operation) {
-        case AST::negation:
+    AnalyzeExpression(get<AST::Node>(expr.properties["operand"]));
+        if (expr.properties["operation"] == AST::negation)
+        {
             if (IsTypeConvertable({{"int64"}}, expr.operand.GetType())) 
             {
                 expr.type = {{"int64"}};
@@ -125,8 +125,9 @@ void TypeAnalyzer::AnalyzeUnaryExpression(AST::Node& expr)
             {
                 IO::AddError({ filename, 0, "Cannot perform negation on non-numerical type " + expr.operand.GetType().base + "."} );
             }
-        break;
-        case AST::bit_not:
+        }
+        if (expr.properties["operation"] == AST::bit_not)
+        {
             if (IsTypeConvertable({{"int64"}}, expr.operand.GetType())) 
             {
                 expr.type = {{"int64"}};
@@ -135,8 +136,8 @@ void TypeAnalyzer::AnalyzeUnaryExpression(AST::Node& expr)
             {
                 IO::AddError({ filename, 0, "Cannot perform bitwise operations on non-integer type " + expr.operand.GetType().base + "."} );
             }
-        break;
-        case AST::logic_not:
+        }
+        if (expr.properties["operation"] == AST::logic_not)
             if (IsTypeConvertable({{"bool"}}, expr.operand.GetType())) 
             {
                 expr.type = {{"bool"}};
@@ -145,8 +146,7 @@ void TypeAnalyzer::AnalyzeUnaryExpression(AST::Node& expr)
             {
                 IO::AddError({ filename, 0, "Cannot perform logical operations on non-boolean type " + expr.operand.GetType().base + "."} );
             }      
-        break;
-        case AST::address:
+        if (expr.properties["operation"] == AST::address)
             if (expr.operand.value->index() == 0)
             {
                 expr.type = expr.operand.GetType();
@@ -156,8 +156,7 @@ void TypeAnalyzer::AnalyzeUnaryExpression(AST::Node& expr)
             {
                 IO::AddError({ filename, 0, "Can only get address of variables (lvalues), and not other types of expression (rvalues)."} );
             }
-        break;
-        case AST::dereference:
+        if (expr.properties["operation"] == AST::dereference)
             if (expr.operand.value->index() > 0)
             {
                 expr.type = expr.operand.GetType();
@@ -167,8 +166,7 @@ void TypeAnalyzer::AnalyzeUnaryExpression(AST::Node& expr)
             {
                 IO::AddError({ filename, 0, "Cannot dereference non-pointer type " + expr.operand.GetType().base + "."} );
             }
-        break;
-    }
+        
 }
 
 void TypeAnalyzer::AnalyzeBinaryExpression(AST::Node& expr)
