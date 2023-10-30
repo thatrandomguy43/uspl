@@ -149,12 +149,6 @@ int main(int argc, const char** argv)
         return 3;
     }
 
-    TypeAnalyzer analyzer;
-    for (auto& file : files)
-    {
-        analyzer.AnalyzeTranslationUnit(file.tree);
-        cout << "Type-checked " << file.name << "\n";
-    }
 
     if (not error_list.empty())
     {

@@ -8,14 +8,20 @@ namespace AST
 {
 
 
-class Node;
+class NewNode
+{
+    virtual std::pair<size_t, size_t>& GetStartEndPos() = 0;
+    virtual std::string Serialize() const = 0;
+};
 
 
-//this solution is also 100x easier to serialize, since its gonna be structured a lot like json
+
 class Node
 {
     public:
     std::string id;
+    size_t start_pos;
+    size_t end_pos;
     std::unordered_map<std::variant<int64_t, std::string>, std::variant<bool,int64_t, double, std::string, Node>> properties;
 
     static Node BuildBasicType(const std::string& type_name)

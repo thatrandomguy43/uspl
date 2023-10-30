@@ -93,6 +93,7 @@ Node Builder::MakeFunctionCallExpression()
     expr.id = "Expression";
     expr.properties["operation_type"] = "function_call";
     expr.properties["arguments"] = Node{"ExpressionList", {}};
+    expr.start_pos = tokens[token_index].file_position;
 
     if (tokens[token_index].type == identifier)
     {
