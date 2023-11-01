@@ -32,6 +32,7 @@ ValueType Builder::MakeValueType()
         else if (tokens[token_index].type == identifier) 
         {
             type.base_or_pointee_type = get<string>(tokens[token_index].contents);
+            token_index++;
         }
         else
         {
@@ -45,6 +46,7 @@ ValueType Builder::MakeValueType()
 FunctionType Builder::MakeFunctionType(optional<vector<string>*> parameter_name_list)
 {
     FunctionType type;
+    token_index++;
     type.return_type = MakeValueType();
     if (tokens[token_index].type != open_parentheses) 
     {
@@ -60,6 +62,11 @@ FunctionType Builder::MakeFunctionType(optional<vector<string>*> parameter_name_
             return type;
         }
         type.parameters.push_back(MakeValueType());
+        if (token_index >= tokens.size())
+        {
+            IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file during parameter type list."});
+            return type;
+        }
         if (parameter_name_list.has_value()) 
         {
             if (tokens[token_index].type != identifier) 
@@ -76,7 +83,10 @@ FunctionType Builder::MakeFunctionType(optional<vector<string>*> parameter_name_
         if (tokens[token_index].type == seperator)
             token_index++;
         else if (tokens[token_index].type != close_parentheses)
+        {
             IO::AddError({filename, tokens[token_index].file_position, "Expected ',' to seperate parameters."});
+            break;
+        }
     }
     token_index++;
     return type;
@@ -119,7 +129,7 @@ unique_ptr<FunctionCall> Builder::MakeFunctionCallExpression()
 
 unique_ptr<BinaryOperation> Builder::MakeBinaryExpression()
 {
-    unique_ptr<BinaryOperation> expr;
+    unique_ptr<BinaryOperation> expr = make_unique<BinaryOperation>();
 
     if (tokens[token_index].type == open_parentheses)
     {
@@ -225,7 +235,7 @@ unique_ptr<Expression> Builder::MakeExpression()
 
     if (token_index >= tokens.size())
     {
-       IO::AddError({filename, tokens.back().file_position, "Expected expression but got end of file"});
+       IO::AddError({filename, tokens[token_index].file_position, "Expected expression but got end of file"});
     }
 
     if (UNARY_OPERATORS.contains(tokens[token_index].type))
@@ -261,7 +271,7 @@ unique_ptr<Expression> Builder::MakeExpression()
     };
     if (cursor >= tokens.size())
     {
-        IO::AddError({filename, tokens.back().file_position, "Expected expression, but reached end of file."});
+        IO::AddError({filename, tokens[token_index].file_position, "Expected expression, but reached end of file."});
         return expr;
     }
     if (BINARY_OPERATORS.contains(tokens[cursor].type)) 
@@ -293,7 +303,7 @@ unique_ptr<BlockStatement> Builder::MakeBlockStatement()
     {
         if (token_index >= tokens.size())
         {
-            IO::AddError({filename, tokens.back().file_position, "Unexpected end of file inside block."});
+            IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file inside block."});
             return block;
         }
         switch (tokens[token_index].type) 
@@ -383,7 +393,7 @@ unique_ptr<AssignmentStatement> Builder::MakeAssignmentStatement()
     token_index += 2;
     if (token_index >= tokens.size())
     {
-        IO::AddError({filename, tokens.back().file_position, "Unexpected end of file in assignment."});
+        IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file in assignment."});
     }
     statement->value = MakeExpression();
     return statement;
@@ -411,7 +421,7 @@ unique_ptr<VariableDefinition> Builder::MakeVariableDefinition()
     token_index++;
     if (token_index >= tokens.size())
     {
-        IO::AddError({filename, tokens.back().file_position, "Unexpected end of file inside variable definition."});
+        IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file inside variable definition."});
         return definition;
     }
     definition->value = MakeExpression();
@@ -426,7 +436,7 @@ unique_ptr<FunctionDefinition> Builder::MakeFunctionDefinition()
 
     if (token_index >= tokens.size())
     {
-        IO::AddError({filename, tokens.back().file_position, "Unexpected end of file instead of function body."});
+        IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file instead of function body."});
         return definition;
     }
     if (tokens[token_index].type == identifier) 
@@ -436,7 +446,7 @@ unique_ptr<FunctionDefinition> Builder::MakeFunctionDefinition()
     }
     else
     {
-        IO::AddError({filename, tokens.back().file_position, "Expected function name after function type."});
+        IO::AddError({filename, tokens[token_index].file_position, "Expected function name after function type."});
     }
     definition->body = MakeBlockStatement();
 
