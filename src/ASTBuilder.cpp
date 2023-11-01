@@ -4,79 +4,34 @@
 using namespace AST;
 using namespace std;
 
-
-const map<TokenType, string> UNARY_OPERATORS
+size_t Builder::CalcEndPos()
 {
-   {operator_bitwise_not, "bitwise_not"},
-   {operator_logical_not, "logical_not"},
-   {operator_pointer, "dereference"},
-   {operator_address, "addressof"},
-   {operator_subtraction, "negation"}
-};
-const map<TokenType, string> BINARY_OPERATORS
+    return tokens[token_index-1].file_position + tokens[token_index-1].length - 1;
+}
+
+ValueType Builder::MakeValueType()
 {
-    {operator_addition, "addition"},
-    {operator_subtraction, "subtraction"},
-    {operator_multiplication, "multiplication"},
-    {operator_division, "division"},
-    {operator_modulo, "modulo"},
-    {operator_bitwise_and, "bitwise_and"},
-    {operator_bitwise_or, "bitwise_or"},
-    {operator_bitwise_xor, "bitwise_xor"},
-    {operator_shift_left, "bitshift_left"},
-    {operator_shift_right, "bitshift_right"},
-    {operator_logical_and, "logical_and"},
-    {operator_logical_or, "logical_or"},
-    {operator_equality, "equals"},
-    {operator_inequality, "notequals"},
-    {operator_lessthan, "lessthan"},
-    {operator_greaterthan, "greaterthan"},
-    {operator_less_or_equal, "lessthan_equals"},
-    {operator_greater_or_equal, "greaterthan_equals"}
-};
-
-
-
-Node Builder::MakeType()
-{
-    Node type;
-    type.id = "Type";
-    type.properties["category"] = "basic";
+    ValueType type;
     if (token_index >= tokens.size())
     {
         IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file during type."});
         return type;
     }
-    if (tokens[token_index].type == keyword_function)
-    {
-        type.properties["category"] = "function";
-        token_index++;
-        if (token_index >= tokens.size())
-        {
-            IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file during type."});
-            return type;
-        }
-    }
     else
     {
-        type.properties["is_const"] = true ? tokens[token_index].type == keyword_const : false;
-        if (tokens[token_index].type != keyword_var and tokens[token_index].type != keyword_const) 
+        type.is_const = true ? tokens[token_index].type == keyword_const : false;
+        if (tokens[token_index].type == keyword_var or type.is_const) 
         {
-            IO::AddError({filename, tokens[token_index].file_position, "Must specity mustability with 'var' or 'const'. (this is pretty dumb for function return types but techinical difficulties apply)"});
-
-        }
-        else
             token_index++;
-    
+        }   
         if (tokens[token_index].type == operator_pointer)
         {
-            type.properties["category"] = "pointer";
             token_index++;
-            type.properties["pointed_to_type"] = MakeType();
+            type.base_or_pointee_type = make_unique<ValueType>(MakeValueType());
         } 
         else if (tokens[token_index].type == identifier) 
         {
-            type.properties["base"] = get<string>(tokens[token_index].contents);
+            type.base_or_pointee_type = get<string>(tokens[token_index].contents);
         }
         else
         {
@@ -87,17 +42,14 @@ Node Builder::MakeType()
     return type;
 }
 
-Node Builder::MakeFunctionCallExpression()
+unique_ptr<FunctionCall> Builder::MakeFunctionCallExpression()
 {
-    Node expr;
-    expr.id = "Expression";
-    expr.properties["operation_type"] = "function_call";
-    expr.properties["arguments"] = Node{"ExpressionList", {}};
-    expr.start_pos = tokens[token_index].file_position;
+    unique_ptr<FunctionCall> expr = make_unique<FunctionCall>();
+    expr->start_pos = tokens[token_index].file_position;
 
     if (tokens[token_index].type == identifier)
     {
-        expr.properties["identifier"] = get<string>(tokens[token_index].contents);
+        expr->name = get<string>(tokens[token_index].contents);
     } 
     else 
     {
@@ -109,10 +61,9 @@ Node Builder::MakeFunctionCallExpression()
         cout << "Uhh, what? Why are we here if this token wasn't an opening parentheses? ASTBuilder::MakeFunctionCallExpression" << endl;
     }
     token_index++;
-    int16_t argument_idx = 0;
     while (tokens[token_index].type != close_parentheses) 
     {
-        get<Node>(expr.properties["arguments"]).properties[argument_idx] = MakeExpression();
+        expr->arguments.push_back(MakeExpression());
         if (tokens[token_index].type == seperator)
         {
             token_index++;
@@ -126,15 +77,14 @@ Node Builder::MakeFunctionCallExpression()
     return expr;
 }
 
-Node Builder::MakeBinaryExpression()
+unique_ptr<BinaryOperation> Builder::MakeBinaryExpression()
 {
-    Node expr;
-    expr.id = "Expression";
-    expr.properties["operation_type"] = "binary";
+    unique_ptr<BinaryOperation> expr;
+
     if (tokens[token_index].type == open_parentheses)
     {
         token_index++;
-        expr.properties["left_operand"] = MakeExpression();
+        expr->left_operand = MakeExpression();
         if (token_index >= tokens.size() or tokens[token_index].type != close_parentheses)
         {
             IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' to close expression."});
@@ -144,14 +94,14 @@ Node Builder::MakeBinaryExpression()
     } 
     else 
     {
-        expr.properties["left_operand"] = MakeSimpleExpression();
+        expr->left_operand = MakeSimpleExpression();
     }
-    expr.properties["operation"] = BINARY_OPERATORS.at(tokens[token_index].type);
+    expr->operation = BINARY_OPERATORS.at(tokens[token_index].type);
     token_index++;
     if (tokens[token_index].type == open_parentheses)
     {
         token_index++;
-        expr.properties["right_operand"] = MakeExpression();
+        expr->right_operand = MakeExpression();
         if (token_index >= tokens.size() or tokens[token_index].type != close_parentheses)
         {
             IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' to close expression."});
@@ -161,21 +111,19 @@ Node Builder::MakeBinaryExpression()
     } 
     else 
     {
-        expr.properties["right_operand"] = MakeSimpleExpression();
+        expr->right_operand = MakeSimpleExpression();
     }
     return expr;
 }
-Node Builder::MakeUnaryExpression()
+unique_ptr<UnaryOperation> Builder::MakeUnaryExpression()
 {
-    Node expr;
-    expr.id = "Expression";
-    expr.properties["operation_type"] = "unary";
-    expr.properties["operation"] = BINARY_OPERATORS.at(tokens[token_index].type);
+    unique_ptr<UnaryOperation> expr = make_unique<UnaryOperation>(); 
+    expr->operation = UNARY_OPERATORS.at(tokens[token_index].type);
     token_index++;
     if (tokens[token_index].type == open_parentheses)
     {
         token_index++;
-        expr.properties["operand"] = MakeExpression();
+        expr->operand = MakeExpression();
         if (token_index >= tokens.size() or tokens[token_index].type != close_parentheses)
         {
             IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' to close expression."});
@@ -185,59 +133,55 @@ Node Builder::MakeUnaryExpression()
     } 
     else 
     {
-        expr.properties["operand"] = MakeSimpleExpression();
+        expr->operand = MakeSimpleExpression();
     }
     return expr;
 }
 
-Node Builder::MakeSimpleExpression()
+unique_ptr<Expression> Builder::MakeSimpleExpression()
 {
-    Node expr;
-    expr.id = "Expression";
     if (tokens[token_index].type == identifier)
     {
-        expr.properties["operation_type"] = "symbol";
-        expr.properties["identifier"] = get<string>(tokens[token_index].contents);
+        unique_ptr<SymbolExpression> expr = make_unique<SymbolExpression>();
+        expr->name = get<string>(tokens[token_index].contents);
         token_index++;
+        return expr;
     } 
     else if (tokens[token_index].type == literal_value)
-    {   
+    {
+        unique_ptr<LiteralExpression> expr = make_unique<LiteralExpression>();
         switch (tokens[token_index].contents.index()) 
         {
             case 1:
-                expr.properties["value"] = get<bool>(tokens[token_index].contents);
-                expr.properties["operation_type"] = "literal_bool";
+                expr->value = get<bool>(tokens[token_index].contents);
             break;
             case 2:
-                expr.properties["value"] = get<int64_t>(tokens[token_index].contents);
-                expr.properties["operation_type"] = "literal_integer";
+                expr->value = get<int64_t>(tokens[token_index].contents);
             break;
             case 3:
-                expr.properties["value"] = get<double>(tokens[token_index].contents);
-                expr.properties["operation_type"] = "literal_float";
+                expr->value = get<double>(tokens[token_index].contents);
             break;
             case 4:
-                expr.properties["value"] = string{get<char>(tokens[token_index].contents)};
-                expr.properties["operation_type"] = "literal_char";
+                expr->value = get<char>(tokens[token_index].contents);
             break;
             case 5:
-                expr.properties["value"] = get<string>(tokens[token_index].contents);
-                expr.properties["operation_type"] = "literal_string";
+                expr->value = get<string>(tokens[token_index].contents);
             break;
         }
         token_index++;
+        return expr;
     }
     else
     {
         IO::AddError({filename, tokens[token_index].file_position, "Expected simple expression (literal or variable name)."});
         token_index++;
+        return {};
     }
-    return expr;
 }
 
-Node Builder::MakeExpression()
+unique_ptr<Expression> Builder::MakeExpression()
 {
-    Node expr;
+    unique_ptr<Expression> expr;
 
     if (token_index >= tokens.size())
     {
@@ -292,13 +236,11 @@ Node Builder::MakeExpression()
     {
        return MakeSimpleExpression();
     }
-    return expr;
 }
 
-Node Builder::MakeBlockStatement()
+unique_ptr<BlockStatement> Builder::MakeBlockStatement()
 {
-    Node block;
-    block.id = "BlockStatement";
+    unique_ptr<BlockStatement> block = make_unique<BlockStatement>();
     if (tokens[token_index].type == keyword_do)
     {
         token_index++;
@@ -307,7 +249,7 @@ Node Builder::MakeBlockStatement()
     {
         IO::AddError({filename, tokens[token_index].file_position, "Expected \'do\' to begin block statement."});
     }
-    for (int statement_idx = 0; tokens[token_index].type != keyword_end; statement_idx++)
+    while (tokens[token_index].type != keyword_end)
     {
         if (token_index >= tokens.size())
         {
@@ -318,7 +260,7 @@ Node Builder::MakeBlockStatement()
         {
             case keyword_var:                                                                                             
             case keyword_const:
-                block.properties[statement_idx] = MakeVariableDefinition();
+                block->statements.push_back(MakeVariableDefinition());
             break;
             case keyword_function:
                 IO::AddError({filename, tokens[token_index].file_position, "Function definition inside function definition not allowed."});
@@ -329,11 +271,11 @@ Node Builder::MakeBlockStatement()
                 {
                     if (tokens[token_index + 1].type == open_parentheses)
                     {
-                       block.properties[statement_idx] = MakeFunctionCallExpression();
+                       block->statements.push_back(MakeFunctionCallExpression());
                     } 
                     else if (tokens[token_index + 1].type == operator_assignment)
                     {
-                        block.properties[statement_idx] = MakeAssignmentStatement();
+                        block->statements.push_back(MakeAssignmentStatement());
                     }
                     else
                     {
@@ -347,13 +289,13 @@ Node Builder::MakeBlockStatement()
                 }
             break;
             case keyword_if:
-                block.properties[statement_idx] = MakeIfStatement();
+                block->statements.push_back(MakeIfStatement());
             break;
             case keyword_while:
-                block.properties[statement_idx] = MakeWhileLoop();
+                block->statements.push_back(MakeWhileLoop());
             break;
             case keyword_return:
-                block.properties[statement_idx] = MakeReturnStatement();
+                block->statements.push_back(MakeReturnStatement());
             break;
             default:
                 IO::AddError({filename, tokens[token_index].file_position, "Keyword does not begin a valid statement."});
@@ -365,75 +307,65 @@ Node Builder::MakeBlockStatement()
     return block;
 }
 
-Node Builder::MakeReturnStatement()
+unique_ptr<ReturnStatement> Builder::MakeReturnStatement()
 {
-    Node statement;
-    statement.id = "ReturnStatement";
+    unique_ptr<ReturnStatement> statement = make_unique<ReturnStatement>();
     token_index++;
-    statement.properties["value"] = MakeExpression();
+    statement->value = MakeExpression();
     return statement;
 }
 
-Node Builder::MakeWhileLoop()
+unique_ptr<WhileLoop> Builder::MakeWhileLoop()
 {
-    Node loop;
-    loop.id = "WhileLoop";
+    unique_ptr<WhileLoop> loop = make_unique<WhileLoop>();
     token_index++;
-    loop.properties["condition"] = MakeExpression();
-    loop.properties["content"] = MakeBlockStatement();
+    loop->condition = MakeExpression();
+    loop->content = MakeBlockStatement();
     return loop;
 }
 
 
-Node Builder::MakeIfStatement()
+unique_ptr<IfStatement> Builder::MakeIfStatement()
 {
-    Node statement;
-    statement.id = "IfStatement";
+    unique_ptr<IfStatement> statement = make_unique<IfStatement>();
     token_index++;
-    statement.properties["condition"] = MakeExpression();
-    statement.properties["content"] = MakeBlockStatement();
+    statement->condition = MakeExpression();
+    statement->content = MakeBlockStatement();
     return statement;
 }
 
-Node Builder::MakeAssignmentStatement()
+unique_ptr<AssignmentStatement> Builder::MakeAssignmentStatement()
 {
-    Node statement;
+    unique_ptr<AssignmentStatement> statement = make_unique<AssignmentStatement>();
 
-    statement.properties["target"] = get<string>(tokens[token_index].contents);
+    statement->symbol = get<string>(tokens[token_index].contents);
     //if we're in this function, we can be sure there was an =, so we dont need to test for it
     token_index += 2;
     if (token_index >= tokens.size())
     {
         IO::AddError({filename, tokens.back().file_position, "Unexpected end of file in assignment."});
     }
-    statement.properties["value"] = MakeExpression();
+    statement->value = MakeExpression();
     return statement;
 }
 
-Node Builder::MakeSymbolDeclaration()
+
+unique_ptr<VariableDefinition> Builder::MakeVariableDefinition()
 {
-    Node declaration;
-    declaration.id = "SymbolDeclaration";
-    declaration.properties["type"] = MakeType();
+    unique_ptr<VariableDefinition> definition = make_unique<VariableDefinition>();
+
+    definition->type = MakeValueType();
     if (token_index >= tokens.size() or tokens[token_index].type != identifier)
     {
-        IO::AddError({filename, tokens[token_index].file_position, "Expected name after type."});
-        return declaration;
-    }
+        IO::AddError({filename, tokens[token_index].file_position, "Expected name after variable type."});
+        token_index++;
+        return definition;
+    } 
     else 
     {
-        declaration.properties["name"] = get<string>(tokens[token_index].contents);
-        token_index++;
+    
     }
-    return declaration;
-}
-
-Node Builder::MakeVariableDefinition()
-{
-    Node definition;
-    definition.id = "VariableDefinition";
-
-    definition.properties["declaration"] = MakeSymbolDeclaration();
+    token_index++;
     if (token_index >= tokens.size() or tokens[token_index].type != operator_assignment)
     {
         IO::AddError({filename, tokens[token_index].file_position, "Expected assignment after variable name."});
@@ -446,15 +378,15 @@ Node Builder::MakeVariableDefinition()
         IO::AddError({filename, tokens.back().file_position, "Unexpected end of file inside variable definition."});
         return definition;
     }
-    definition.properties["value"] = MakeExpression();
+    definition->value = MakeExpression();
     return definition;
 }
-Node Builder::MakeFunctionDefinition()
+//what do about parameter name
+unique_ptr<FunctionDefinition> Builder::MakeFunctionDefinition()
 {
-    Node definition;
-    definition.id = "FunctionDefinition";
+    unique_ptr<FunctionDefinition> definition = make_unique<FunctionDefinition>();
     
-    definition.properties["declaration"] = MakeSymbolDeclaration();
+    definition->type = MakeFunctionType();
 
     if (token_index >= tokens.size())
     {
@@ -462,12 +394,12 @@ Node Builder::MakeFunctionDefinition()
         return definition;
     }
 
-    definition.properties["body"] = MakeBlockStatement();
+    definition->body = MakeBlockStatement();
 
     return definition;
 }
 
-void Builder::BuildFile(Node& root, const std::vector<Token>& token_source, const std::string& source_filename)
+TranslationUnit Builder::BuildFile(const std::vector<Token>& token_source, const std::string& source_filename)
 {
     token_index = 0;
     tokens = token_source;

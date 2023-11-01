@@ -16,7 +16,7 @@ class CodeFile
     string name;
     string source_code;
     vector<Token> tokens;
-    AST::Node tree;
+    AST::TranslationUnit tree;
     string IRFile;
 };
 
@@ -138,7 +138,7 @@ int main(int argc, const char** argv)
     AST::Builder builder;
     for (auto& file : files)
     {
-        builder.BuildFile(file.tree, file.tokens, file.name);
+        file.tree = builder.BuildFile(file.tokens, file.name);
         cout << "Built AST of " << file.name << "\n";
     }
 
