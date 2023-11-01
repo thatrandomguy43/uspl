@@ -78,8 +78,8 @@ class ValueType
 class FunctionType
 {
     public:
-    std::unique_ptr<ValueType> return_type;
-    std::vector<std::unique_ptr<ValueType>> parameters;
+    ValueType return_type;
+    std::vector<ValueType> parameters;
 };
 
 class Node
@@ -87,7 +87,7 @@ class Node
     public:
     size_t start_pos, end_pos;
     virtual std::string Serialize() const = 0;
-    virtual ~Node() = 0;
+    virtual ~Node(){};
 };
 
 class Expression
@@ -215,6 +215,7 @@ class FunctionDefinition : public GlobalStatement, public Node
     public:
     std::string name;
     FunctionType type;
+    std::vector<std::string> parameter_names;
     std::unique_ptr<BlockStatement> body;
     std::string Serialize() const {return "Placeholder node serialization output.";}
     ~FunctionDefinition(){};
@@ -234,7 +235,7 @@ std::vector<Token> tokens;
 size_t token_index;
 
 ValueType MakeValueType();
-FunctionType MakeFunctionType();
+FunctionType MakeFunctionType(std::optional<std::vector<std::string>*>);
 std::unique_ptr<FunctionCall> MakeFunctionCallExpression();
 std::unique_ptr<BinaryOperation> MakeBinaryExpression();
 std::unique_ptr<UnaryOperation> MakeUnaryExpression();

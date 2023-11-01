@@ -42,6 +42,46 @@ ValueType Builder::MakeValueType()
     return type;
 }
 
+FunctionType Builder::MakeFunctionType(optional<vector<string>*> parameter_name_list)
+{
+    FunctionType type;
+    type.return_type = MakeValueType();
+    if (tokens[token_index].type != open_parentheses) 
+    {
+        IO::AddError({filename, tokens[token_index].file_position, "Expected type name here."});
+    }
+    else 
+        token_index++;
+    while (tokens[token_index].type != close_parentheses) 
+    {
+        if (token_index >= tokens.size())
+        {
+            IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file during parameter type list."});
+            return type;
+        }
+        type.parameters.push_back(MakeValueType());
+        if (parameter_name_list.has_value()) 
+        {
+            if (tokens[token_index].type != identifier) 
+            {
+                IO::AddError({filename, tokens[token_index].file_position, "Expected parameter name."});
+            }
+            else
+            {
+                parameter_name_list.value()->push_back(get<string>(tokens[token_index].contents));
+                token_index++;
+            }
+        }
+
+        if (tokens[token_index].type == seperator)
+            token_index++;
+        else if (tokens[token_index].type != close_parentheses)
+            IO::AddError({filename, tokens[token_index].file_position, "Expected ',' to seperate parameters."});
+    }
+    token_index++;
+    return type;
+};
+
 unique_ptr<FunctionCall> Builder::MakeFunctionCallExpression()
 {
     unique_ptr<FunctionCall> expr = make_unique<FunctionCall>();
@@ -358,19 +398,15 @@ unique_ptr<VariableDefinition> Builder::MakeVariableDefinition()
     if (token_index >= tokens.size() or tokens[token_index].type != identifier)
     {
         IO::AddError({filename, tokens[token_index].file_position, "Expected name after variable type."});
-        token_index++;
-        return definition;
     } 
     else 
     {
-    
+        definition->name = get<string>(tokens[token_index].contents);
     }
-    token_index++;
+    
     if (token_index >= tokens.size() or tokens[token_index].type != operator_assignment)
     {
         IO::AddError({filename, tokens[token_index].file_position, "Expected assignment after variable name."});
-        token_index++;
-        return definition;
     }
     token_index++;
     if (token_index >= tokens.size())
@@ -386,14 +422,22 @@ unique_ptr<FunctionDefinition> Builder::MakeFunctionDefinition()
 {
     unique_ptr<FunctionDefinition> definition = make_unique<FunctionDefinition>();
     
-    definition->type = MakeFunctionType();
+    definition->type = MakeFunctionType(&definition->parameter_names);
 
     if (token_index >= tokens.size())
     {
         IO::AddError({filename, tokens.back().file_position, "Unexpected end of file instead of function body."});
         return definition;
     }
-
+    if (tokens[token_index].type == identifier) 
+    {
+        definition->name = get<string>(tokens[token_index].contents);
+        token_index++;
+    }
+    else
+    {
+        IO::AddError({filename, tokens.back().file_position, "Expected function name after function type."});
+    }
     definition->body = MakeBlockStatement();
 
     return definition;
@@ -401,27 +445,26 @@ unique_ptr<FunctionDefinition> Builder::MakeFunctionDefinition()
 
 TranslationUnit Builder::BuildFile(const std::vector<Token>& token_source, const std::string& source_filename)
 {
+    TranslationUnit unit;
     token_index = 0;
     tokens = token_source;
     filename = source_filename;
-    int statement_idx = 0;
     while (token_index < tokens.size() and tokens[token_index].type != error_token)
     {
         switch (tokens[token_index].type) 
         {
             case keyword_var:                                                                                             
             case keyword_const:
-                root.properties[statement_idx] = MakeVariableDefinition();
+                unit.statements.push_back(MakeVariableDefinition());
             break;
             case keyword_function:
-                root.properties[statement_idx] = MakeFunctionDefinition();
+                unit.statements.push_back(MakeFunctionDefinition());
             break;
             default:
             IO::AddError({filename, tokens[token_index].file_position, "Expected symbol declaration (nothing else allowed outside a function)"});
             token_index++;
             break;
         }
-        statement_idx++;
     }
-    return;
+    return unit;
 }
