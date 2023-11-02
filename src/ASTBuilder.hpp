@@ -96,6 +96,7 @@ class Expression
     Expression(){};
     public:
     std::unique_ptr<ValueType> type;
+    virtual ~Expression(){}
 };
 
 class SymbolExpression : public Expression, public Node
@@ -136,8 +137,9 @@ class BinaryOperation : public Expression, public Node
 class LocalStatement
 {
     protected:
-    LocalStatement(){};
+    LocalStatement(){}
     public:
+    virtual ~LocalStatement(){}
 };
 
 class GlobalStatement
@@ -145,6 +147,7 @@ class GlobalStatement
     protected:
     GlobalStatement(){};
     public:
+    virtual ~GlobalStatement(){}
 };
 
 

@@ -1,4 +1,4 @@
-function var int32(const int32 argc, $$const char argv)
+function var int32(const int32 argc, $$const char argv) main
 do
     var int32 sus = 4
     sus = 3 + sus

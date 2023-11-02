@@ -413,7 +413,7 @@ unique_ptr<VariableDefinition> Builder::MakeVariableDefinition()
     {
         definition->name = get<string>(tokens[token_index].contents);
     }
-    
+    token_index++;
     if (token_index >= tokens.size() or tokens[token_index].type != operator_assignment)
     {
         IO::AddError({filename, tokens[token_index].file_position, "Expected assignment after variable name."});

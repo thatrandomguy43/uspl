@@ -141,7 +141,6 @@ int main(int argc, const char** argv)
         file.tree = builder.BuildFile(file.tokens, file.name);
         cout << "Built AST of " << file.name << "\n";
     }
-
     if (not error_list.empty())
     {
         PrintErrors(files);
