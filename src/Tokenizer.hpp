@@ -55,6 +55,7 @@ enum TokenType
     operator_address,
     operator_pointer,
     operator_reference,
+    operator_array_length,
     operator_member_access,
     operator_scope_resolution,
     keyword_new,
@@ -71,12 +72,6 @@ enum TokenType
     close_brace,
 
     seperator,
-    parameter_list_indicator,
-
-    reserved_hash,
-    reserved_exclamation,
-    reserved_questionmark,
-    reserved_semicolon,
 
     error_token
 

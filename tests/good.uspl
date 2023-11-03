@@ -1,7 +1,8 @@
+const float64 THREE_HALFS = 1.5
 function var int32(const int32 argc, $$const char argv) main
 do
     var int32 sus = 4
-    sus = 3 + sus
+    sus = (3 + sus) * (~sus)
     if sus == 7
     do
         var float64 amog = 4.2

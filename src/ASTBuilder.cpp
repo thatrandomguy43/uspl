@@ -9,12 +9,13 @@ size_t Builder::CalcEndPos()
     return tokens[token_index-1].file_position + tokens[token_index-1].length - 1;
 }
 
+
 ValueType Builder::MakeValueType()
 {
     ValueType type;
     if (token_index >= tokens.size())
     {
-        IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file during type."});
+        IO::AddError({filename, string::npos, "Expected type but got end of file."});
         return type;
     }
     else
@@ -23,7 +24,12 @@ ValueType Builder::MakeValueType()
         if (tokens[token_index].type == keyword_var or type.is_const) 
         {
             token_index++;
-        }   
+        }
+        if (token_index >= tokens.size())
+        {
+            IO::AddError({filename, string::npos, "Expected type but got end of file."});
+            return type;
+        }
         if (tokens[token_index].type == operator_pointer)
         {
             token_index++;
@@ -58,13 +64,13 @@ FunctionType Builder::MakeFunctionType(optional<vector<string>*> parameter_name_
     {
         if (token_index >= tokens.size())
         {
-            IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file during parameter type list."});
+            IO::AddError({filename, string::npos, "Unexpected end of file during parameter type list."});
             return type;
         }
         type.parameters.push_back(MakeValueType());
         if (token_index >= tokens.size())
         {
-            IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file during parameter type list."});
+            IO::AddError({filename, string::npos, "Unexpected end of file during parameter type list."});
             return type;
         }
         if (parameter_name_list.has_value()) 
@@ -106,10 +112,6 @@ unique_ptr<FunctionCall> Builder::MakeFunctionCallExpression()
         IO::AddError({filename, tokens[token_index].file_position, "Expected identifier in function call expression"});
     }
     token_index++;
-    if (tokens[token_index].type != open_parentheses) 
-    {
-        cout << "Uhh, what? Why are we here if this token wasn't an opening parentheses? ASTBuilder::MakeFunctionCallExpression" << endl;
-    }
     token_index++;
     while (tokens[token_index].type != close_parentheses) 
     {
@@ -118,19 +120,25 @@ unique_ptr<FunctionCall> Builder::MakeFunctionCallExpression()
         {
             token_index++;
         }
+        if (token_index >= tokens.size())
+        {
+            IO::AddError({filename, string::npos, "Unexpected end of file during function call."});
+            return expr;
+        }
         else if (tokens[token_index].type != close_parentheses)
         {
             IO::AddError({filename, tokens[token_index].file_position, "Missing \',\' between function arguments."});
         }
     }
     token_index++;
+    expr->end_pos = CalcEndPos();
     return expr;
 }
 
 unique_ptr<BinaryOperation> Builder::MakeBinaryExpression()
 {
     unique_ptr<BinaryOperation> expr = make_unique<BinaryOperation>();
-
+    expr->start_pos = tokens[token_index].file_position;
     if (tokens[token_index].type == open_parentheses)
     {
         token_index++;
@@ -138,7 +146,6 @@ unique_ptr<BinaryOperation> Builder::MakeBinaryExpression()
         if (token_index >= tokens.size() or tokens[token_index].type != close_parentheses)
         {
             IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' to close expression."});
-            return expr;
         }
         token_index++;
     } 
@@ -146,7 +153,10 @@ unique_ptr<BinaryOperation> Builder::MakeBinaryExpression()
     {
         expr->left_operand = MakeSimpleExpression();
     }
-    expr->operation = BINARY_OPERATORS.at(tokens[token_index].type);
+    if (BINARY_OPERATORS.contains(tokens[token_index].type))
+        expr->operation = BINARY_OPERATORS.at(tokens[token_index].type);
+    else
+        IO::AddError({filename, tokens[token_index].file_position, "Token is not a valid binary operator."});
     token_index++;
     if (tokens[token_index].type == open_parentheses)
     {
@@ -155,7 +165,6 @@ unique_ptr<BinaryOperation> Builder::MakeBinaryExpression()
         if (token_index >= tokens.size() or tokens[token_index].type != close_parentheses)
         {
             IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' to close expression."});
-            return expr;
         }
         token_index++;
     } 
@@ -163,12 +172,17 @@ unique_ptr<BinaryOperation> Builder::MakeBinaryExpression()
     {
         expr->right_operand = MakeSimpleExpression();
     }
+    expr->end_pos = CalcEndPos();
     return expr;
 }
 unique_ptr<UnaryOperation> Builder::MakeUnaryExpression()
 {
-    unique_ptr<UnaryOperation> expr = make_unique<UnaryOperation>(); 
-    expr->operation = UNARY_OPERATORS.at(tokens[token_index].type);
+    unique_ptr<UnaryOperation> expr = make_unique<UnaryOperation>();
+    expr->start_pos = tokens[token_index].file_position;
+    if (UNARY_OPERATORS.contains(tokens[token_index].type))
+        expr->operation = UNARY_OPERATORS.at(tokens[token_index].type);
+    else
+        IO::AddError({filename, tokens[token_index].file_position, "Token is not a valid unary operator."});
     token_index++;
     if (tokens[token_index].type == open_parentheses)
     {
@@ -177,7 +191,6 @@ unique_ptr<UnaryOperation> Builder::MakeUnaryExpression()
         if (token_index >= tokens.size() or tokens[token_index].type != close_parentheses)
         {
             IO::AddError({filename, tokens[token_index].file_position, "Expected \')\' to close expression."});
-            return expr;
         }
         token_index++;
     } 
@@ -185,6 +198,7 @@ unique_ptr<UnaryOperation> Builder::MakeUnaryExpression()
     {
         expr->operand = MakeSimpleExpression();
     }
+    expr->end_pos = CalcEndPos();
     return expr;
 }
 
@@ -193,13 +207,16 @@ unique_ptr<Expression> Builder::MakeSimpleExpression()
     if (tokens[token_index].type == identifier)
     {
         unique_ptr<SymbolExpression> expr = make_unique<SymbolExpression>();
+        expr->start_pos = tokens[token_index].file_position;
         expr->name = get<string>(tokens[token_index].contents);
         token_index++;
+        expr->end_pos = CalcEndPos();
         return expr;
     } 
     else if (tokens[token_index].type == literal_value)
     {
         unique_ptr<LiteralExpression> expr = make_unique<LiteralExpression>();
+        expr->start_pos = tokens[token_index].file_position;
         switch (tokens[token_index].contents.index()) 
         {
             case 1:
@@ -219,11 +236,12 @@ unique_ptr<Expression> Builder::MakeSimpleExpression()
             break;
         }
         token_index++;
+        expr->end_pos = CalcEndPos();
         return expr;
     }
     else
     {
-        IO::AddError({filename, tokens[token_index].file_position, "Expected simple expression (literal or variable name)."});
+        IO::AddError({filename, tokens[token_index].file_position, "Expected simple expression (literal or variable name) or expression wrapped in parentheses."});
         token_index++;
         return {};
     }
@@ -232,10 +250,9 @@ unique_ptr<Expression> Builder::MakeSimpleExpression()
 unique_ptr<Expression> Builder::MakeExpression()
 {
     unique_ptr<Expression> expr;
-
     if (token_index >= tokens.size())
     {
-       IO::AddError({filename, tokens[token_index].file_position, "Expected expression but got end of file"});
+       IO::AddError({filename, string::npos, "Expected expression but got end of file"});
     }
 
     if (UNARY_OPERATORS.contains(tokens[token_index].type))
@@ -271,7 +288,7 @@ unique_ptr<Expression> Builder::MakeExpression()
     };
     if (cursor >= tokens.size())
     {
-        IO::AddError({filename, tokens[token_index].file_position, "Expected expression, but reached end of file."});
+        IO::AddError({filename, string::npos, "Expected expression, but reached end of file."});
         return expr;
     }
     if (BINARY_OPERATORS.contains(tokens[cursor].type)) 
@@ -291,6 +308,7 @@ unique_ptr<Expression> Builder::MakeExpression()
 unique_ptr<BlockStatement> Builder::MakeBlockStatement()
 {
     unique_ptr<BlockStatement> block = make_unique<BlockStatement>();
+    block->start_pos = tokens[token_index].file_position;
     if (tokens[token_index].type == keyword_do)
     {
         token_index++;
@@ -303,7 +321,7 @@ unique_ptr<BlockStatement> Builder::MakeBlockStatement()
     {
         if (token_index >= tokens.size())
         {
-            IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file inside block."});
+            IO::AddError({filename, string::npos, "Unexpected end of file inside block."});
             return block;
         }
         switch (tokens[token_index].type) 
@@ -348,29 +366,34 @@ unique_ptr<BlockStatement> Builder::MakeBlockStatement()
                 block->statements.push_back(MakeReturnStatement());
             break;
             default:
-                IO::AddError({filename, tokens[token_index].file_position, "Keyword does not begin a valid statement."});
+                IO::AddError({filename, tokens[token_index].file_position, "Token does not begin a valid statement."});
                 token_index++;
             break;
         }
     }
     token_index++;
+    block->end_pos = CalcEndPos();
     return block;
 }
 
 unique_ptr<ReturnStatement> Builder::MakeReturnStatement()
 {
     unique_ptr<ReturnStatement> statement = make_unique<ReturnStatement>();
+    statement->start_pos = tokens[token_index].file_position;
     token_index++;
     statement->value = MakeExpression();
+    statement->end_pos = CalcEndPos();
     return statement;
 }
 
 unique_ptr<WhileLoop> Builder::MakeWhileLoop()
 {
     unique_ptr<WhileLoop> loop = make_unique<WhileLoop>();
+    loop->start_pos = tokens[token_index].file_position;
     token_index++;
     loop->condition = MakeExpression();
     loop->content = MakeBlockStatement();
+    loop->end_pos = CalcEndPos();
     return loop;
 }
 
@@ -378,24 +401,27 @@ unique_ptr<WhileLoop> Builder::MakeWhileLoop()
 unique_ptr<IfStatement> Builder::MakeIfStatement()
 {
     unique_ptr<IfStatement> statement = make_unique<IfStatement>();
+    statement->start_pos = tokens[token_index].file_position;
     token_index++;
     statement->condition = MakeExpression();
     statement->content = MakeBlockStatement();
+    statement->end_pos = CalcEndPos();
     return statement;
 }
 
 unique_ptr<AssignmentStatement> Builder::MakeAssignmentStatement()
 {
     unique_ptr<AssignmentStatement> statement = make_unique<AssignmentStatement>();
-
+    statement->start_pos = tokens[token_index].file_position;
     statement->symbol = get<string>(tokens[token_index].contents);
     //if we're in this function, we can be sure there was an =, so we dont need to test for it
     token_index += 2;
     if (token_index >= tokens.size())
     {
-        IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file in assignment."});
+        IO::AddError({filename, string::npos, "Unexpected end of file in assignment."});
     }
     statement->value = MakeExpression();
+    statement->end_pos = CalcEndPos();
     return statement;
 }
 
@@ -403,7 +429,7 @@ unique_ptr<AssignmentStatement> Builder::MakeAssignmentStatement()
 unique_ptr<VariableDefinition> Builder::MakeVariableDefinition()
 {
     unique_ptr<VariableDefinition> definition = make_unique<VariableDefinition>();
-
+    definition->start_pos = tokens[token_index].file_position;
     definition->type = MakeValueType();
     if (token_index >= tokens.size() or tokens[token_index].type != identifier)
     {
@@ -421,22 +447,23 @@ unique_ptr<VariableDefinition> Builder::MakeVariableDefinition()
     token_index++;
     if (token_index >= tokens.size())
     {
-        IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file inside variable definition."});
+        IO::AddError({filename, string::npos, "Unexpected end of file inside variable definition."});
         return definition;
     }
     definition->value = MakeExpression();
+    definition->end_pos = CalcEndPos();
     return definition;
 }
 //what do about parameter name
 unique_ptr<FunctionDefinition> Builder::MakeFunctionDefinition()
 {
     unique_ptr<FunctionDefinition> definition = make_unique<FunctionDefinition>();
-    
+    definition->start_pos = tokens[token_index].file_position;
     definition->type = MakeFunctionType(&definition->parameter_names);
 
     if (token_index >= tokens.size())
     {
-        IO::AddError({filename, tokens[token_index].file_position, "Unexpected end of file instead of function body."});
+        IO::AddError({filename, string::npos, "Unexpected end of file instead of function body."});
         return definition;
     }
     if (tokens[token_index].type == identifier) 
@@ -449,7 +476,7 @@ unique_ptr<FunctionDefinition> Builder::MakeFunctionDefinition()
         IO::AddError({filename, tokens[token_index].file_position, "Expected function name after function type."});
     }
     definition->body = MakeBlockStatement();
-
+    definition->end_pos = CalcEndPos();
     return definition;
 }
 
@@ -471,7 +498,7 @@ TranslationUnit Builder::BuildFile(const std::vector<Token>& token_source, const
                 unit.statements.push_back(MakeFunctionDefinition());
             break;
             default:
-            IO::AddError({filename, tokens[token_index].file_position, "Expected symbol declaration (nothing else allowed outside a function)"});
+            IO::AddError({filename, tokens[token_index].file_position, "Expected function or variable declaration."});
             token_index++;
             break;
         }

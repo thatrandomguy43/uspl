@@ -37,7 +37,7 @@ void PrintErrors(const vector<CodeFile>& files)
         size_t index = 0;
         for (auto error : error_list[file.name])
         {
-            while (index != error.position) {
+            while (index != error.position and index < file.source_code.length()) {
                 index++;
                 char_num++;
                 if (file.source_code[index] == '\n')
@@ -141,6 +141,7 @@ int main(int argc, const char** argv)
         file.tree = builder.BuildFile(file.tokens, file.name);
         cout << "Built AST of " << file.name << "\n";
     }
+
     if (not error_list.empty())
     {
         PrintErrors(files);

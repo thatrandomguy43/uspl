@@ -5,18 +5,31 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(Windows) Launch",
+            "name": "Launch Compiler",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/uspl_compiler.exe",
-            "args": ["${workspaceFolder}/testin.uspl"],
+            "args": ["${workspaceFolder}/tests/good.uspl"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
             "console": "integratedTerminal"
         },
         {
-            "name": "(Windows) aaa bals",
+            "name": "Run compiler tests",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/uspl_compiler.exe",
+            "args": ["${workspaceFolder}/tests/good.uspl",
+                    "${workspaceFolder}/tests/keywordspam.uspl",
+                    "${workspaceFolder}/tests/unusual_declarations.uspl"],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Launch clang ast dump test.cpp",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/a.exe",

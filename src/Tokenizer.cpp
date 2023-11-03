@@ -29,9 +29,7 @@ const map<string, TokenType> SYMBOL_TOKEN_IDS
     {">>", operator_shift_right},
     {"@", operator_address},
     {"$", operator_pointer},
-    {"£", operator_reference},
-    {".", operator_member_access},
-    {"::", operator_scope_resolution},
+    {"#",operator_array_length},
     {"(",open_parentheses},
     {")",close_parentheses},
     {"[",open_bracket},
@@ -39,11 +37,7 @@ const map<string, TokenType> SYMBOL_TOKEN_IDS
     {"{",open_brace},
     {"}",close_brace},
     {",",seperator},
-    {"#",reserved_hash},
-    {"!",reserved_exclamation},
-    {"?",reserved_questionmark},
-    {":",parameter_list_indicator},
-    {";",reserved_semicolon},
+    
     
 };
 
@@ -52,8 +46,6 @@ const map<string, TokenType> KEYWORD_TOKEN_IDS
     {"var", keyword_var},
     {"const", keyword_const},
     {"function", keyword_function},
-    {"class", keyword_class},
-    {"namespace", keyword_namespace},
     {"do", keyword_do},
     {"end", keyword_end},
     {"return", keyword_return},
@@ -77,6 +69,7 @@ vector<Token> Tokenizer::TokenizeText(const std::string& filename, const std::st
 {
     name = filename;
     text = filetext;
+    position = 0;
     vector<Token> token_list;
     while (position < text.size())
     {   
