@@ -16,7 +16,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Run compiler tests",
+            "name": "Run Compiler Tests",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/uspl_compiler.exe",
@@ -29,11 +29,11 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Launch clang ast dump test.cpp",
+            "name": "Launch Scratchpad",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/a.exe",
-            "args": ["${workspaceFolder}/testin.uspl"],
+            "program": "${workspaceFolder}/scratchpad.exe",
+            "args": [],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
