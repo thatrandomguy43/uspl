@@ -1,0 +1,17 @@
+#include "ASTBuilder.hpp"
+void TypeAnalyze(AST::Expression&);
+void TypeAnalyze(AST::SymbolExpression&);
+void TypeAnalyze(AST::LiteralExpression&);
+void TypeAnalyze(AST::UnaryOperation&);
+void TypeAnalyze(AST::BinaryOperation&);
+void TypeAnalyze(AST::LocalStatement&);
+void TypeAnalyze(AST::GlobalStatement&);
+void TypeAnalyze(AST::FunctionCall&);
+void TypeAnalyze(AST::ReturnStatement&);
+void TypeAnalyze(AST::BlockStatement&);
+void TypeAnalyze(AST::IfStatement&);
+void TypeAnalyze(AST::WhileLoop&);
+void TypeAnalyze(AST::AssignmentStatement&);
+void TypeAnalyze(AST::VariableDefinition&);
+void TypeAnalyze(AST::FunctionDefinition&);
+void TypeAnalyze(AST::TranslationUnit&);

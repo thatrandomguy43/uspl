@@ -1,11 +1,10 @@
-#include "Tokenizer.hpp"
-#include "ASTBuilder.hpp"
 #include "TypeAnalyzer.hpp"
 #include "IO.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <chrono>
+#include <algorithm>
 using namespace std;
 using namespace IO;
 
@@ -21,7 +20,7 @@ class CodeFile
 };
 
 set<string> IO::program_args;
-map<string,vector<IO::CompileError>> error_list;
+unordered_map<string,vector<IO::CompileError>> error_list;
 chrono::time_point<chrono::high_resolution_clock> start_time;
 
 void PrintErrors(const vector<CodeFile>& files)
@@ -35,6 +34,7 @@ void PrintErrors(const vector<CodeFile>& files)
         size_t line_num = 1;
         size_t char_num = 1;
         size_t index = 0;
+        sort<vector<CompileError>::iterator, bool(*)(const CompileError&, const CompileError&)>(error_list[file.name].begin(), error_list[file.name].end(), &CompileError::LessThan);
         for (auto error : error_list[file.name])
         {
             while (index != error.position and index < file.source_code.length()) {
@@ -148,7 +148,6 @@ int main(int argc, const char** argv)
         PrintTimeElapsed();
         return 3;
     }
-
 
     if (not error_list.empty())
     {
