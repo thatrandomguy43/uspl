@@ -138,7 +138,7 @@ int main(int argc, const char** argv)
     AST::Builder builder;
     for (auto& file : files)
     {
-        file.tree = builder.BuildFile(file.tokens, file.name);
+        file.tree = builder.BuildFile(file.tokens, &file.name);
         cout << "Built AST of " << file.name << "\n";
     }
 

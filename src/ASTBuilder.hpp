@@ -71,6 +71,7 @@ const std::unordered_map<TokenType, BinaryOpType> BINARY_OPERATORS
 class ValueType 
 {
     public:
+    size_t start_pos, end_pos;
     bool is_const;
     std::variant<std::string, std::unique_ptr<ValueType>> base_or_pointee_type;
 };
@@ -78,6 +79,7 @@ class ValueType
 class FunctionType
 {
     public:
+    size_t start_pos, end_pos;
     ValueType return_type;
     std::vector<ValueType> parameters;
 };
@@ -207,6 +209,8 @@ class VariableDefinition : public LocalStatement, public GlobalStatement, public
 {
     public:
     std::string name;
+    //this exists to position errors (specifically identifier already exists errors) during type analysis
+    size_t name_file_pos;
     ValueType type;
     std::unique_ptr<Expression> value;
     std::string Serialize() const {return "Placeholder node serialization output.";}
@@ -217,6 +221,8 @@ class FunctionDefinition : public GlobalStatement, public Node
 {
     public:
     std::string name;
+    //this exists to position errors (specifically identifier already exists errors) during type analysis
+    size_t name_file_pos;
     FunctionType type;
     std::vector<std::string> parameter_names;
     std::unique_ptr<BlockStatement> body;
@@ -233,7 +239,7 @@ class TranslationUnit
 
 class Builder    
 {
-std::string filename;
+const std::string* filename;
 std::vector<Token> tokens;
 size_t token_index;
 
@@ -256,6 +262,6 @@ size_t CalcEndPos();
 public:
 
 
-TranslationUnit BuildFile(const std::vector<Token>&, const std::string&);                                                                     
+TranslationUnit BuildFile(const std::vector<Token>&, const std::string*);                                                                     
 };
 }

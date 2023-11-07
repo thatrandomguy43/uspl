@@ -1,17 +1,26 @@
 #include "ASTBuilder.hpp"
-void TypeAnalyze(AST::Expression&);
-void TypeAnalyze(AST::SymbolExpression&);
-void TypeAnalyze(AST::LiteralExpression&);
-void TypeAnalyze(AST::UnaryOperation&);
-void TypeAnalyze(AST::BinaryOperation&);
-void TypeAnalyze(AST::LocalStatement&);
-void TypeAnalyze(AST::GlobalStatement&);
-void TypeAnalyze(AST::FunctionCall&);
-void TypeAnalyze(AST::ReturnStatement&);
-void TypeAnalyze(AST::BlockStatement&);
-void TypeAnalyze(AST::IfStatement&);
-void TypeAnalyze(AST::WhileLoop&);
-void TypeAnalyze(AST::AssignmentStatement&);
-void TypeAnalyze(AST::VariableDefinition&);
-void TypeAnalyze(AST::FunctionDefinition&);
-void TypeAnalyze(AST::TranslationUnit&);
+class TypeAnalyzer
+{
+const std::string* filename;
+std::unordered_map<std::string, std::pair<std::variant<const AST::VariableDefinition*, const AST::FunctionDefinition*>, uint16_t>> known_symbols;
+uint16_t current_scope_depth = 0;
+void Analyze(AST::Expression&);
+void Analyze(AST::SymbolExpression&);
+void Analyze(AST::LiteralExpression&);
+void Analyze(AST::UnaryOperation&);
+void Analyze(AST::BinaryOperation&);
+void Analyze(AST::LocalStatement&);
+void Analyze(AST::GlobalStatement&);
+void Analyze(AST::FunctionCall&);
+void Analyze(AST::ReturnStatement&);
+void Analyze(AST::BlockStatement&);
+void Analyze(AST::IfStatement&);
+void Analyze(AST::WhileLoop&);
+void Analyze(AST::AssignmentStatement&);
+void Analyze(AST::VariableDefinition&);
+void Analyze(AST::FunctionDefinition&);
+
+public:
+void Analyze(AST::TranslationUnit&, const std::string*);
+};
+
