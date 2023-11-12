@@ -4,8 +4,10 @@ class TypeAnalyzer
 const std::string* filename;
 std::unordered_map<std::string, std::pair<std::variant<const AST::VariableDefinition*, const AST::FunctionDefinition*>, uint16_t>> known_symbols;
 uint16_t current_scope_depth = 0;
+
+bool IsValidValueType(const AST::ValueType&);
 void Analyze(AST::Expression&);
-void Analyze(AST::SymbolExpression&);
+void Analyze(AST::VariableNameExpression&);
 void Analyze(AST::LiteralExpression&);
 void Analyze(AST::UnaryOperation&);
 void Analyze(AST::BinaryOperation&);

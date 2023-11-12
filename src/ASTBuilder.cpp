@@ -209,7 +209,7 @@ unique_ptr<Expression> Builder::MakeSimpleExpression()
 {
     if (tokens[token_index].type == identifier)
     {
-        unique_ptr<SymbolExpression> expr = make_unique<SymbolExpression>();
+        unique_ptr<VariableNameExpression> expr = make_unique<VariableNameExpression>();
         expr->start_pos = tokens[token_index].file_position;
         expr->name = get<string>(tokens[token_index].contents);
         token_index++;

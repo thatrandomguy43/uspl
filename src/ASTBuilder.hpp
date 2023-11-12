@@ -84,6 +84,9 @@ class FunctionType
     std::vector<ValueType> parameters;
 };
 
+class VariableDefinition;
+class FunctionDefinition;
+
 class Node
 {
     public:
@@ -101,12 +104,13 @@ class Expression
     virtual ~Expression(){}
 };
 
-class SymbolExpression : public Expression, public Node
+class VariableNameExpression : public Expression, public Node
 {
     public:
     std::string name;
+    const VariableDefinition* target_decl;
     std::string Serialize() const {return "Placeholder node serialization output.";}
-    ~SymbolExpression(){};
+    ~VariableNameExpression(){};
 };
 
 class LiteralExpression : public Expression, public Node
@@ -157,6 +161,7 @@ class FunctionCall : public Expression, public LocalStatement, public Node
 {
     public:
     std::string name;
+    const FunctionDefinition* target_decl;
     std::vector<std::unique_ptr<Expression>> arguments;
     std::string Serialize() const {return "Placeholder node serialization output.";}
     ~FunctionCall(){};
